@@ -40,6 +40,11 @@ class App
                 if (!$this->services()->has($controller)) {
                     $this->services()->setInvokableClass($controller, $controller);
                 }
+                $controller = $this->services()->get($controller);
+                $action = $match->getParam("action");
+                $this->hydrate($this, $controller);
+
+                $this->events()->attach("execute", array($controller, $action));
             }
 
             return $match;
@@ -172,23 +177,9 @@ class App
                 )
             );
 
-            $controller = $routeMatch->getParam("controller");
-
-            if (!$this->services()->has($controller)) {
-                throw new Exception\PageNotFoundException("Missing controller \"{$controller}\"");
-            }
-
-            $controller = $this->services()->get($controller);
-            $action = $routeMatch->getParam("action");
-
-            if (!method_exists($controller, $action)) {
-                throw new Exception\PageNotFoundException("Missing action \"{$action}\"");
-            }
-
             $this->response()->setStatusCode(Response::STATUS_CODE_200);
-            $this->hydrate($this, $controller);
-            $dataPack = call_user_func(array($controller, $action), $routeMatch);
-
+            $controllerExecution = $this->events()->trigger("execute", $routeMatch);
+            $dataPack = $controllerExecution->last();
             $this->trigger(
                 "renderer",
                 array(
@@ -204,7 +195,6 @@ class App
             $this->trigger("redirect");
             $this->redirect();
         } catch (Exception\PageNotFoundException $e) {
-            die(Var_dump($e));
             $this->trigger("404");
         } catch (\Exception $e) {
             $this->response()->setStatusCode(Response::STATUS_CODE_500);
