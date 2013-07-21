@@ -7,6 +7,7 @@ trait ControllerHydrator
     {
         $traits = $this->class_uses_deep($controller);
         $this->hydrateServices($traits, $app->services(), $controller);
+        $this->hydrateEvents($traits, $app->events(), $controller);
         $this->hydrateRequest($traits, $app->request(), $controller);
         $this->hydrateResponse($traits, $app->response(), $controller);
     }
@@ -15,6 +16,13 @@ trait ControllerHydrator
     {
         if (in_array("UpCloo\\Controller\\ServiceManager", $traits)) {
             $controller->setServiceManager($serviceManager);
+        }
+    }
+
+    private function hydrateEvents($traits, $eventManager, $controller)
+    {
+        if (in_array("UpCloo\\Controller\\EventManager", $traits)) {
+            $controller->setEventManager($eventManager);
         }
     }
 

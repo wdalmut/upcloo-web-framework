@@ -122,3 +122,27 @@ the first argument is the redirect location.
 The Redirector traits uses the "Response trait" by itself, for that reason when you use
 the redirector the Response traits is automatically added to your controller.
 
+EventManager
+------------
+
+Inside an event you can attach and fire other events adding the EventManager
+trait::
+
+    <?php
+    namespace Your\\NM;
+
+    use UpCloo\Controller\EventManager;
+
+    class TheHookContainer
+    {
+        use EventManager;
+
+        public function anHook()
+        {
+            $this->events()->attach("finish", function() {
+                //Good bye cruel world!
+            });
+        }
+    }
+
+

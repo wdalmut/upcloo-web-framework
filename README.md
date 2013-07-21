@@ -10,11 +10,9 @@ framework.
 
 ## License
 
-This project uses the MIT license.
+This project is released under MIT license.
 
-
-#Getting started
-
+##Getting started
 
 In the `scenario` folder you can find an example but a tipical starting point
 can be something like this...
