@@ -58,5 +58,14 @@ When you need to hook your code on events you can specify through the
         )
     )
 
-Any `callable` hook is valid
+Any `callable` hook is valid ::
+
+     "listeners" => array(
+        "404" => array(
+            function() {
+                // handle 404
+            }
+        )
+    )
+
 

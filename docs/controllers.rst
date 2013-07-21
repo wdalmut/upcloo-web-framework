@@ -11,7 +11,7 @@ Controllers are simply `POPO` object, like this: ::
         }
     }
 
-Controllers and actions are mapped thank to the ``TreeRouteStack`` as you can
+Controllers and actions are mapped thanks to the ``TreeRouteStack`` as you can
 see in the :doc:`getting-started` section.
 
 Interact with the event data
