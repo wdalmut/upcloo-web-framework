@@ -40,11 +40,13 @@ class App
                 if (!$this->services()->has($controller)) {
                     $this->services()->setInvokableClass($controller, $controller);
                 }
+
                 $controller = $this->services()->get($controller);
                 $action = $match->getParam("action");
                 $this->hydrate($this, $controller);
 
                 $this->events()->attach("execute", array($controller, $action));
+                $this->events()->attach("renderer", array($match->getParam("renderer"), "render"));
             }
 
             return $match;
@@ -166,7 +168,6 @@ class App
                 $this->response()->setStatusCode(Response::STATUS_CODE_404);
                 throw new Exception\PageNotFoundException("page not found");
             }
-            $this->events()->attach("renderer", array($routeMatch->getParam("renderer"), "render"));
             $this->trigger(
                 "pre.fetch",
                 array(
@@ -179,11 +180,10 @@ class App
 
             $this->response()->setStatusCode(Response::STATUS_CODE_200);
             $controllerExecution = $this->events()->trigger("execute", $routeMatch);
-            $dataPack = $controllerExecution->last();
             $this->trigger(
                 "renderer",
                 array(
-                    "dataPack" => $dataPack,
+                    "data" => $controllerExecution,
                     "request" => $this->request(),
                     "response" => $this->response()
                 )

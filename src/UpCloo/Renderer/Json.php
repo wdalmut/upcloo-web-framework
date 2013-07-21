@@ -5,7 +5,7 @@ class Json
 {
     public function render($event)
     {
-        $dataPack = $event->getParam("dataPack");
+        $dataPack = $event->getParam("data")->last();
         $response = $event->getParam("response");
 
         $response->getHeaders()->addHeaders(
