@@ -4,7 +4,9 @@ This is just a simple microframework based on ZF2 components.
 
 ## Considerations
 
-Actually the source code is quite a bit messy... I'm working on features.
+Actually the source code is quite a bit messy (App.php)... I'm working on the
+framework requirements and validating the reality that we need a custom
+framework.
 
 ## License
 
