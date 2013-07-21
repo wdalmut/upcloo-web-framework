@@ -197,9 +197,6 @@ class App
 
         } catch (Exception\HaltException $e) {
             $this->trigger("halt");
-        } catch (Exception\RedirectException $e) {
-            $this->trigger("redirect");
-            $this->redirect();
         } catch (Exception\PageNotFoundException $e) {
             $this->trigger("404");
         } catch (\Exception $e) {
