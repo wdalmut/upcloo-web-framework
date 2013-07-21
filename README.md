@@ -14,9 +14,8 @@ This project is released under MIT license.
 
 ##Getting started
 
-In the `scenario` folder you can find an example but a tipical starting point
-can be something like this...
-
+In the `scenario` folder you can find not only an example but a typical starting
+point...
 You can use a project folder that you prefer but a good starting point is:
 
      - src
@@ -112,7 +111,7 @@ Concurrency level: 5
 ```
 
 This report is generated using the internal php web server (as web server) and
-the Apache "ab" tool.
+the Apache "ab" tool (as load system).
 
 As you can see, this micro framework response, in mean, in less than one order
 of magnitude than ZF2 standard application with a JSON RESTful module installed
