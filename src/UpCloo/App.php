@@ -46,7 +46,13 @@ class App
                 $this->hydrate($this, $controller);
 
                 $this->events()->attach("execute", array($controller, $action));
-                $this->events()->attach("renderer", array($match->getParam("renderer"), "render"));
+
+                $renderer = $match->getParam("renderer");
+                if (!$this->services()->has($renderer)) {
+                    $this->services()->setInvokableClass($renderer, $renderer);
+                }
+                $renderer = $this->services()->get($renderer);
+                $this->events()->attach("renderer", array($renderer, "render"));
             }
 
             return $match;

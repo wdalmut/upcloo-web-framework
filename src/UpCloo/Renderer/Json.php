@@ -5,7 +5,7 @@ class Json
 {
     public function render($event)
     {
-        $dataPack = $event->getParam("data")->last();
+        $dataPack = $this->getDataPack($event);
         $response = $event->getParam("response");
 
         $response->getHeaders()->addHeaders(
@@ -14,5 +14,11 @@ class Json
             )
         );
         $response->setContent(json_encode($dataPack));
+    }
+
+    protected function getDataPack($event)
+    {
+        $dataPack = $event->getParam("data")->last();
+        return $dataPack;
     }
 }
