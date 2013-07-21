@@ -80,3 +80,11 @@ class Name
 }
 ```
 
+Start your web service
+
+```
+php -S localhost:8080 -t web
+```
+
+Go to your page `-> localhost:8080/walter`
+
