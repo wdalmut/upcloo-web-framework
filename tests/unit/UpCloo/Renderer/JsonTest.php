@@ -18,7 +18,10 @@ class JsonTest extends \PHPUnit_Framework_TestCase
         $event = new Event();
         $response = new Response();
 
-        $event->setParam("dataPack", array("walter" => "ciao"));
+        $data = new \Zend\EventManager\ResponseCollection();
+        $data->push(array("walter" => "ciao"));
+
+        $event->setParam("data", $data);
         $event->setParam("response", $response);
 
         $this->object->render($event);

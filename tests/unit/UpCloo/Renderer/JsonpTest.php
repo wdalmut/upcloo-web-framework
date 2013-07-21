@@ -32,7 +32,9 @@ EOS
 
         $response = new Response();
 
-        $event->setParam("dataPack", array("walter" => "ciao"));
+        $data = new \Zend\EventManager\ResponseCollection();
+        $data->push(array("walter" => "ciao"));
+        $event->setParam("data", $data);
         $event->setParam("response", $response);
         $event->setParam("request", $request);
 
@@ -55,7 +57,9 @@ EOS
 
         $response = new Response();
 
-        $event->setParam("dataPack", array("walter" => "ciao"));
+        $data = new \Zend\EventManager\ResponseCollection();
+        $data->push(array("walter" => "ciao"));
+        $event->setParam("data", $data);
         $event->setParam("response", $response);
         $event->setParam("request", $request);
 
