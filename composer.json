@@ -1,4 +1,13 @@
 {
+    "name": "upcloo/micro-framework",
+    "description": "Just a simple micro-framework built in top of ZF2 components",
+    "type": "framework",
+    "keywords": [
+        "zf2",
+        "framework",
+        "micro"
+    ],
+    "license": "MIT",
     "autoload": {
         "psr-0": {"UpCloo": "src/"}
     },
