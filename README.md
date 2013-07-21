@@ -13,6 +13,23 @@ This project uses the MIT license.
 
 #Getting started
 
+
+In the `scenario` folder you can find an example but a tipical starting point
+can be something like this...
+
+You can use a project folder that you prefer but a good starting point is:
+
+     - src
+       - Your
+         - Namespace
+     - tests
+       - Your
+         - Namespace
+     - web
+     - configs
+
+The entry point (web/index.php)
+
 ```
 <?php
 $loader = include __DIR__ . '/vendor/autoload.php';
@@ -24,5 +41,42 @@ $app = new \UpCloo\App($conf);
 $app->bootstrap()->run();
 ```
 
-In the `scenario` folder you can find an example.
+Here is a config (configs/app.php)
+
+```
+<?php
+return array(
+    "router" => array(
+        "routes" => array(
+            "home" => array(
+                "type" => "Literal",
+                "options" => array(
+                    "route" => "/walter",
+                    'defaults' => array(
+                        'renderer' => 'UpCloo\\Renderer\\Jsonp',
+                        'controller' => 'Your\\Controller\\Name',
+                        'action' => 'hello'
+                    )
+                ),
+                'may_terminate' => true,
+            )
+        )
+    )
+);
+```
+
+Start with a controller (src/Your/Controller/Name.php)
+
+```
+<?php
+namespace Your\Controller;
+
+class Name
+{
+    public function hello()
+    {
+        return "world";
+    }
+}
+```
 
