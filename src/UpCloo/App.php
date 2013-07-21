@@ -161,6 +161,7 @@ class App
 
     public function run()
     {
+        $this->bootstrap();
         $events = $this->events();
 
         $this->trigger("begin");

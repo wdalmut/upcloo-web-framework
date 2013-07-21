@@ -35,13 +35,13 @@ the `index.php` file. ::
 
     $conf = include __DIR__ . "/../configs/app.php";
     $app = new \UpCloo\App($conf);
-    $app->bootstrap()->run();
+    $app->run();
 
 As you can see the first to line uses the composer autoloader in order to
 satisfy all your dependencies.
 
 The configuration is loaded through the inclusion. Subsequently we create
-the application and after that we `bootstrap` it and `run` it.
+the application and after that we `run` it.
 
 Your base configuration
 -----------------------
