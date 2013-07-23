@@ -73,12 +73,15 @@ class App
      */
     private function registerServices()
     {
-        if (array_key_exists("services", $this->conf)) {
-            $services = $this->conf["services"];
-            $config = new ServiceManagerConfig($services);
-            $serviceManager = new ServiceManager($config);
-            $this->setServiceManager($serviceManager);
+        if (!array_key_exists("services", $this->conf)) {
+            $this->conf["services"] = array();
         }
+
+        $services = $this->conf["services"];
+        $config = new ServiceManagerConfig($services);
+        $serviceManager = new ServiceManager($config);
+        $this->setServiceManager($serviceManager);
+        $this->services()->setService("Config", $this->conf);
     }
 
     private function registerListeners()
@@ -132,9 +135,8 @@ class App
     public function services()
     {
         if (!$this->serviceManager) {
-            $this->serviceManager = new ServiceManager();
+            $this->registerServices();
         }
-
         return $this->serviceManager;
     }
 
