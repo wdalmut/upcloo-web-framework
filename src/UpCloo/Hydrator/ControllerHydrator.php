@@ -3,8 +3,15 @@ namespace UpCloo\Hydrator;
 
 trait ControllerHydrator
 {
+    /**
+     * @todo proxy objects limits the traits usage
+     */
     public function hydrate(\UpCloo\App $app, $controller)
     {
+        if ($controller instanceOf \Zend\Cache\Pattern\ObjectCache) {
+            $controller = $controller->getOptions()->getObject();
+        }
+
         $traits = $this->class_uses_deep($controller);
         $this->hydrateServices($traits, $app->services(), $controller);
         $this->hydrateEvents($traits, $app->events(), $controller);
