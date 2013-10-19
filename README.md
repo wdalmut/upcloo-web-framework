@@ -54,13 +54,26 @@ return array(
                 "options" => array(
                     "route" => "/walter",
                     'defaults' => array(
-                        'renderer' => 'UpCloo\\Renderer\\Jsonp',
                         'controller' => 'Your\\Controller\\Name',
                         'action' => 'hello'
                     )
                 ),
                 'may_terminate' => true,
             )
+        )
+    ),
+    "services" => array(
+        "invokables" => array(
+            "Your\\Controller\\Name" => "Your\\Controller\\Name",
+            "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp"
+        ),
+        "factories" => array(
+            "example" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
+                return "that-service";
+            }
+        ),
+        "aliases" => array(
+            "renderer" => "UpCloo\\Renderer\\Jsonp"
         )
     )
 );

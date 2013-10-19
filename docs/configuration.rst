@@ -12,7 +12,6 @@ Basically only the `router` section is a must. ::
                     "options" => array(
                         "route" => "/"
                         "defaults" => array(
-                            "renderer" => "UpCloo\\Renderer\\Json",
                             "controller" => "Your\\NS\\Controller",
                             "action" => "myAction"
                         )
@@ -32,7 +31,8 @@ In addition you can configure services: ::
 
     "services" => array(
         "invokables" => array(
-            "My\\Controller\\Example" => "My\\Controller\\Example"
+            "My\\Controller\\Example" => "My\\Controller\\Example",
+            "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp",
         ),
         "factories" => array(
             "example" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
@@ -40,7 +40,8 @@ In addition you can configure services: ::
             }
         ),
         "aliases" => array(
-            "exampleController" => "My\\Controller\\Example"
+            "exampleController" => "My\\Controller\\Example",
+            "renderer" = "UpCloo\\Renderer\\Jsonp"
         )
     ),
 
