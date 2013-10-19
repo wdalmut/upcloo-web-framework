@@ -60,7 +60,6 @@ the router and at least one controller. ::
                     "options" => array(
                         "route" => "/"
                         'defaults' => array(
-                            'renderer' => 'UpCloo\\Renderer\\Jsonp',
                             'controller' => 'My\\NM\\Index',
                             'action' => 'aMethod'
                         )
@@ -69,6 +68,11 @@ the router and at least one controller. ::
                 )
              )
           )
+      ),
+      "services" => array(
+        "aliases" => array(
+          "renderer" => "UpCloo\\Renderer\\Json"
+        )
       )
 
 Now the ActionController
