@@ -3,8 +3,10 @@ namespace My\Controller;
 
 class Error
 {
-    public function error()
+    public function error($e)
     {
-
+        return array(
+            'error' => 'Missing page'
+        );
     }
 }

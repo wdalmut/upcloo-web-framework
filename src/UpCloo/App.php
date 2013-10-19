@@ -46,13 +46,6 @@ class App
                 $this->hydrate($this, $controller);
 
                 $this->events()->attach("execute", array($controller, $action));
-
-                $renderer = $match->getParam("renderer");
-                if (!$this->services()->has($renderer)) {
-                    $this->services()->setInvokableClass($renderer, $renderer);
-                }
-                $renderer = $this->services()->get($renderer);
-                $this->events()->attach("renderer", array($renderer, "render"));
             }
 
             return $match;
@@ -61,6 +54,11 @@ class App
         $this->router = TreeRouteStack::factory($this->conf["router"]);
         $closure->bindTo($this);
         $this->events()->attach("route", $closure);
+
+        if ($this->services()->has("renderer")) {
+            $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
+            $this->events()->attach("renderer", array($renderer, "render"));
+        }
 
         $this->registerListeners();
         $this->registerServices();
@@ -189,23 +187,23 @@ class App
 
             $this->response()->setStatusCode(Response::STATUS_CODE_200);
             $controllerExecution = $this->events()->trigger("execute", $routeMatch);
-            $this->trigger(
-                "renderer",
-                array(
-                    "data" => $controllerExecution,
-                    "request" => $this->request(),
-                    "response" => $this->response()
-                )
-            );
-
         } catch (Exception\HaltException $e) {
-            $this->trigger("halt");
+            $controllerExecution = $this->events()->trigger("halt");
         } catch (Exception\PageNotFoundException $e) {
-            $this->trigger("404");
+            $controllerExecution = $this->events()->trigger("404");
         } catch (\Exception $e) {
             $this->response()->setStatusCode(Response::STATUS_CODE_500);
-            $this->trigger("500", array("exception" => $e));
+            $controllerExecution = $this->events()->trigger("500", array("exception" => $e));
         }
+
+        $this->trigger(
+            "renderer",
+            array(
+                "data" => $controllerExecution,
+                "request" => $this->request(),
+                "response" => $this->response()
+            )
+        );
 
         $this->trigger('finish');
         $this->response()->send();

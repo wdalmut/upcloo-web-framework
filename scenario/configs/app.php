@@ -7,7 +7,6 @@ return array(
                 "options" => array(
                     "route" => "/walter",
                     'defaults' => array(
-                        'renderer' => 'UpCloo\\Renderer\\Jsonp',
                         'controller' => 'exampleController',
                         'action' => 'method'
                     )
@@ -26,7 +25,8 @@ return array(
     ),
     "services" => array(
         "invokables" => array(
-            "My\\Controller\\Example" => "My\\Controller\\Example"
+            "My\\Controller\\Example" => "My\\Controller\\Example",
+            "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp"
         ),
         "factories" => array(
             "example" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
@@ -34,7 +34,8 @@ return array(
             }
         ),
         "aliases" => array(
-            "exampleController" => "My\\Controller\\Example"
+            "exampleController" => "My\\Controller\\Example",
+            "renderer" => "UpCloo\\Renderer\\Jsonp"
         )
     ),
     "listeners" => array(
