@@ -29,8 +29,16 @@ class App
         $this->conf = $conf;
     }
 
+    /**
+     *Prepare the application
+     *
+     * @return UpCloo\App The application
+     */
     public function bootstrap()
     {
+        $this->registerServices();
+        $this->registerListeners();
+
         $closure = function($event){
             $request = $event->getParam('request');
             $match = $this->getRouter()->match($request);
@@ -59,9 +67,6 @@ class App
             $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
             $this->events()->attach("renderer", array($renderer, "render"));
         }
-
-        $this->registerListeners();
-        $this->registerServices();
 
         return $this;
     }
@@ -94,6 +99,11 @@ class App
     private function registerCallbacks($eventName, $callables)
     {
         foreach ($callables as $callable) {
+            if (is_array($callable)) {
+                if ($this->services()->has($callable[0])) {
+                    $callable[0] = $this->services()->get($callable[0]);
+                }
+            }
             $this->events()->attach($eventName, $callable);
         }
     }
@@ -159,6 +169,9 @@ class App
         return $this->response;
     }
 
+    /**
+     * Run the application
+     */
     public function run()
     {
         $this->bootstrap();
