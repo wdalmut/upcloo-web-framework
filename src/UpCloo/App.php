@@ -24,8 +24,12 @@ class App
 
     use Hydrator\ControllerHydrator;
 
-    public function __construct(array $conf)
+    public function __construct(array $configs)
     {
+        $conf = [];
+        foreach ($configs as $confFile) {
+            $conf = array_replace_recursive($conf, $confFile);
+        }
         $this->conf = $conf;
     }
 
