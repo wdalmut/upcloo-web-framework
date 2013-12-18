@@ -19,7 +19,6 @@ class App
     private $events;
     private $request;
     private $response;
-    private $eventManager;
     private $serviceManager;
 
     use Hydrator\ControllerHydrator;
@@ -71,6 +70,10 @@ class App
             $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
             $this->events()->attach("renderer", array($renderer, "render"));
         }
+
+        $this->events()->attach("send.response", function($event) {
+            $this->response()->send();
+        });
 
         return $this;
     }
@@ -222,7 +225,7 @@ class App
             )
         );
 
-        $this->trigger('finish');
-        $this->response()->send();
+        $this->trigger("finish");
+        $this->trigger("send.response");
     }
 }
