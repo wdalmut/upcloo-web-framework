@@ -1,7 +1,7 @@
 <?php
 namespace UpCloo\Test;
 
-use Zend\Http\Request as HttpRequest;
+use Zend\Http\PhpEnvironment\Request as HttpRequest;
 use Zend\Uri\Http as HttpUri;
 use Zend\Stdlib\Parameters;
 
