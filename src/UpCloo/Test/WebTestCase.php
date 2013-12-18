@@ -13,6 +13,10 @@ class WebTestCase extends \PHPUnit_Framework_TestCase
 
     public function setApp($app)
     {
+        $app->events()->attach("send.response", function($event) {
+            $event->stopPropagation(true);
+        }, 100);
+
         $this->app = $app;
     }
 
