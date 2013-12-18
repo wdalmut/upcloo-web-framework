@@ -160,12 +160,22 @@ class App
         $this->serviceManager = $serviceManager;
     }
 
+    public function setRequest($request)
+    {
+        $this->request = $request;
+    }
+
     public function request()
     {
         if (!$this->request instanceof Request) {
             $this->request = new Request;
         }
         return $this->request;
+    }
+
+    public function setResponse($response)
+    {
+        $this->response = $response;
     }
 
     public function response()
