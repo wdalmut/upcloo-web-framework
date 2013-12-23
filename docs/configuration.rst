@@ -69,4 +69,23 @@ Any `callable` hook is valid ::
         )
     )
 
+Overload your configuration
+---------------------------
+
+You can pass to your `App` different configurations. The framework merge those
+together in order to obtain a single configuration.
+
+This thing could be useful in order to obtain the right configuration for the
+current environment.
+
+For example see something like this: ::
+
+    $app = new \UpCloo\App([
+        include __DIR__ . '/../config/app.php',
+        include __DIR__ . "/../config/app.{$env}.php",
+    ]);
+
+In this way the conf loaded from `app.php` is overwritten by the second configuration
+and so on. You can load how many conf you need.
+
 

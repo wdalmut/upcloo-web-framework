@@ -34,7 +34,7 @@ the `index.php` file. ::
     $loader->add("My", __DIR__ . '/../src');
 
     $conf = include __DIR__ . "/../configs/app.php";
-    $app = new \UpCloo\App($conf);
+    $app = new \UpCloo\App([$conf]);
     $app->run();
 
 As you can see the first to line uses the composer autoloader in order to
