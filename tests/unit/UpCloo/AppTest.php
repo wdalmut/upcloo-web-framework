@@ -26,7 +26,7 @@ class AppTest extends \PHPUnit_Framework_TestCase
                 )
             )
         );
-        $this->object = new App($conf);
+        $this->object = new App([$conf]);
         $this->object->bootstrap();
     }
 

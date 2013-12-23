@@ -34,7 +34,7 @@ the `index.php` file. ::
     $loader->add("My", __DIR__ . '/../src');
 
     $conf = include __DIR__ . "/../configs/app.php";
-    $app = new \UpCloo\App($conf);
+    $app = new \UpCloo\App([$conf]);
     $app->run();
 
 As you can see the first to line uses the composer autoloader in order to
@@ -60,7 +60,6 @@ the router and at least one controller. ::
                     "options" => array(
                         "route" => "/"
                         'defaults' => array(
-                            'renderer' => 'UpCloo\\Renderer\\Jsonp',
                             'controller' => 'My\\NM\\Index',
                             'action' => 'aMethod'
                         )
@@ -69,6 +68,11 @@ the router and at least one controller. ::
                 )
              )
           )
+      ),
+      "services" => array(
+        "aliases" => array(
+          "renderer" => "UpCloo\\Renderer\\Json"
+        )
       )
 
 Now the ActionController

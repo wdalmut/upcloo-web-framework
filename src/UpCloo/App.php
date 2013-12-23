@@ -19,18 +19,29 @@ class App
     private $events;
     private $request;
     private $response;
-    private $eventManager;
     private $serviceManager;
 
     use Hydrator\ControllerHydrator;
 
-    public function __construct(array $conf)
+    public function __construct(array $configs)
     {
+        $conf = [];
+        foreach ($configs as $confFile) {
+            $conf = array_replace_recursive($conf, $confFile);
+        }
         $this->conf = $conf;
     }
 
+    /**
+     *Prepare the application
+     *
+     * @return UpCloo\App The application
+     */
     public function bootstrap()
     {
+        $this->registerServices();
+        $this->registerListeners();
+
         $closure = function($event){
             $request = $event->getParam('request');
             $match = $this->getRouter()->match($request);
@@ -60,8 +71,9 @@ class App
             $this->events()->attach("renderer", array($renderer, "render"));
         }
 
-        $this->registerListeners();
-        $this->registerServices();
+        $this->events()->attach("send.response", function($event) {
+            $this->response()->send();
+        });
 
         return $this;
     }
@@ -94,6 +106,11 @@ class App
     private function registerCallbacks($eventName, $callables)
     {
         foreach ($callables as $callable) {
+            if (is_array($callable)) {
+                if ($this->services()->has($callable[0])) {
+                    $callable[0] = $this->services()->get($callable[0]);
+                }
+            }
             $this->events()->attach($eventName, $callable);
         }
     }
@@ -143,12 +160,22 @@ class App
         $this->serviceManager = $serviceManager;
     }
 
+    public function setRequest($request)
+    {
+        $this->request = $request;
+    }
+
     public function request()
     {
         if (!$this->request instanceof Request) {
             $this->request = new Request;
         }
         return $this->request;
+    }
+
+    public function setResponse($response)
+    {
+        $this->response = $response;
     }
 
     public function response()
@@ -159,6 +186,9 @@ class App
         return $this->response;
     }
 
+    /**
+     * Run the application
+     */
     public function run()
     {
         $this->bootstrap();
@@ -205,7 +235,7 @@ class App
             )
         );
 
-        $this->trigger('finish');
-        $this->response()->send();
+        $this->trigger("finish");
+        $this->trigger("send.response");
     }
 }
