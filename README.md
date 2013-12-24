@@ -133,9 +133,9 @@ of magnitude than ZF2 standard application with a JSON RESTful module installed
 
 ## Build Status
 
-    * Master branch
-        * [![Build Status](https://secure.travis-ci.org/wdalmut/upcloo-web-framework.png?branch=master)](http://travis-ci.org/wdalmut/upcloo-web-framework?branch=master)
-    * Develop branch
-        * [![Build Status](https://secure.travis-ci.org/wdalmut/upcloo-web-framework.png?branch=develop)](http://travis-ci.org/wdalmut/upcloo-web-framework?branch=develop)
+* Master branch
+  * [![Build Status](https://secure.travis-ci.org/wdalmut/upcloo-web-framework.png?branch=master)](http://travis-ci.org/wdalmut/upcloo-web-framework?branch=master)
+* Develop branch
+  * [![Build Status](https://secure.travis-ci.org/wdalmut/upcloo-web-framework.png?branch=develop)](http://travis-ci.org/wdalmut/upcloo-web-framework?branch=develop)
 
 
