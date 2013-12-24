@@ -54,11 +54,6 @@ class App
         ];
     }
 
-    /**
-     *Prepare the application
-     *
-     * @return UpCloo\App The application
-     */
     public function bootstrap()
     {
         $this->registerRouter();
@@ -115,10 +110,11 @@ class App
      */
     private function registerServices()
     {
-        $services = $this->conf["services"];
-        $config = new ServiceManagerConfig($services);
-        $serviceManager = new ServiceManager($config);
-        $this->setServiceManager($serviceManager);
+        $serviceManager = $this->services();
+
+        $config = new ServiceManagerConfig($this->conf["services"]);
+        $config->configureServiceManager($serviceManager);
+
         $this->services()->setService("Config", $this->conf);
     }
 
@@ -132,13 +128,20 @@ class App
     private function registerCallbacks($eventName, $callables)
     {
         foreach ($callables as $callable) {
-            if (is_array($callable)) {
-                if ($this->services()->has($callable[0])) {
-                    $callable[0] = $this->services()->get($callable[0]);
-                }
-            }
+            $callable = $this->resolveCallableWithServiceManager($callable);
             $this->events()->attach($eventName, $callable);
         }
+    }
+
+    private function resolveCallableWithServiceManager($callable)
+    {
+        if (is_array($callable)) {
+            if ($this->services()->has($callable[0])) {
+                $callable[0] = $this->services()->get($callable[0]);
+            }
+        }
+
+        return $callable;
     }
 
     public function getRouter()
@@ -176,8 +179,9 @@ class App
     public function services()
     {
         if (!$this->serviceManager) {
-            $this->registerServices();
+            $this->serviceManager = new ServiceManager();
         }
+
         return $this->serviceManager;
     }
 
@@ -194,8 +198,9 @@ class App
     public function request()
     {
         if (!$this->request instanceof Request) {
-            $this->request = new Request;
+            $this->request = new Request();
         }
+
         return $this->request;
     }
 
@@ -207,8 +212,9 @@ class App
     public function response()
     {
         if (!($this->response instanceof Response)) {
-            $this->response = new Response;
+            $this->response = new Response();
         }
+
         return $this->response;
     }
 
@@ -218,31 +224,11 @@ class App
     public function run()
     {
         $this->bootstrap();
-        $events = $this->events();
 
         $this->trigger("begin");
+
         try {
-            $request = $this->request();
-
-            $eventCollection = $this->trigger("route", array("request" => $request));
-            $routeMatch = $eventCollection->last();
-
-            if ($routeMatch == null) {
-                $this->response()->setStatusCode(Response::STATUS_CODE_404);
-                throw new Exception\PageNotFoundException("page not found");
-            }
-            $this->trigger(
-                "pre.fetch",
-                array(
-                    "eventManager" => $this->events(),
-                    "request" => $this->request(),
-                    "response" => $this->response(),
-                    "routeMatch" => $routeMatch
-                )
-            );
-
-            $this->response()->setStatusCode(Response::STATUS_CODE_200);
-            $controllerExecution = $this->events()->trigger("execute", $routeMatch);
+            $controllerExecution = $this->dispatchUserRequest();
         } catch (Exception\HaltException $e) {
             $controllerExecution = $this->events()->trigger("halt");
         } catch (Exception\PageNotFoundException $e) {
@@ -263,5 +249,38 @@ class App
 
         $this->trigger("finish");
         $this->trigger("send.response");
+    }
+
+    private function dispatchUserRequest()
+    {
+        $request = $this->request();
+
+        $eventCollection = $this->trigger("route", array("request" => $request));
+        $routeMatch = $eventCollection->last();
+
+        if ($this->isPageMissing($routeMatch)) {
+            $this->response()->setStatusCode(Response::STATUS_CODE_404);
+            throw new Exception\PageNotFoundException("page not found");
+        }
+
+        $this->trigger(
+            "pre.fetch",
+            array(
+                "eventManager" => $this->events(),
+                "request" => $this->request(),
+                "response" => $this->response(),
+                "routeMatch" => $routeMatch
+            )
+        );
+
+        $this->response()->setStatusCode(Response::STATUS_CODE_200);
+        $controllerExecution = $this->events()->trigger("execute", $routeMatch);
+
+        return $controllerExecution;
+    }
+
+    private function isPageMissing($routeMatch)
+    {
+        return ($routeMatch == null);
     }
 }

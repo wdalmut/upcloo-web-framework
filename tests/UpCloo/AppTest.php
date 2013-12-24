@@ -2,6 +2,7 @@
 namespace UpCloo;
 
 use Zend\EventManager\EventManager;
+use Zend\ServiceManager\ServiceManager;
 
 class AppTest extends Test\WebTestCase
 {
@@ -57,10 +58,23 @@ class AppTest extends Test\WebTestCase
             ]
         ];
         $app = new App([$myConf]);
+        $app->bootstrap();
 
         $renderer = $app->services()->get("renderer");
 
         $this->assertInstanceOf("UpCloo\\Renderer\\Json", $renderer);
+    }
+
+    public function testServiceManagerIsNotReplaced()
+    {
+        $app = new App([]);
+
+        $serviceManager = new ServiceManager();
+        $app->setServiceManager($serviceManager);
+
+        $app->bootstrap();
+
+        $this->assertSame($serviceManager, $app->services());
     }
 
     /**
