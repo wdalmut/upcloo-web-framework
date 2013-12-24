@@ -1,6 +1,8 @@
 <?php
 namespace UpCloo;
 
+use Zend\EventManager\EventManager;
+
 class AppTest extends Test\WebTestCase
 {
     private $app;
@@ -34,6 +36,53 @@ class AppTest extends Test\WebTestCase
         );
         $app = new App([$conf]);
         $this->setApp($app);
+    }
+
+    public function testAppFlowWorks()
+    {
+        $this->dispatch("/walter");
+        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $this->getApp()->response()->getContent());
+    }
+
+    public function testConfigurationOverwrite()
+    {
+        $myConf = [
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json"
+                ],
+                "aliases" => [
+                    "renderer" => "UpCloo\\Renderer\\Json",
+                ]
+            ]
+        ];
+        $app = new App([$myConf]);
+
+        $renderer = $app->services()->get("renderer");
+
+        $this->assertInstanceOf("UpCloo\\Renderer\\Json", $renderer);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage The 'renderer' alias must implement Renderizable interface
+     */
+    public function testInvalidRenderer()
+    {
+        $conf = [
+            "services" => [
+                "factories" => [
+                    "UpCloo\\Renderer\\Invalid" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
+                        return "FAIL";
+                    },
+                ],
+                "aliases" => [
+                    "renderer" => "UpCloo\\Renderer\\Invalid",
+                ],
+            ]
+        ];
+        $app = new App([$conf]);
+        $app->bootstrap();
     }
 
     public function testRouteEventIsFired()
@@ -228,11 +277,11 @@ class AppTest extends Test\WebTestCase
         $app = new App([]);
         $this->setApp($app, false);
 
-        $responseStub = $this->getMock("Zend\\Http\\PhpEnvironment\\Response");
-        $responseStub->expects($this->once())
+        $responseMock = $this->getMock("Zend\\Http\\PhpEnvironment\\Response", ["send"]);
+        $responseMock->expects($this->once())
             ->method("send")
             ->will($this->returnValue(true));
-        $app->setResponse($responseStub);
+        $app->setResponse($responseMock);
 
         $this->dispatch("/a-page");
     }

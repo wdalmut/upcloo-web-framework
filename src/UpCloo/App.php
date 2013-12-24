@@ -25,11 +25,27 @@ class App
 
     public function __construct(array $configs)
     {
-        $conf = [];
+        $conf = $this->getAnEmptyConf();
         foreach ($configs as $confFile) {
             $conf = array_replace_recursive($conf, $confFile);
         }
         $this->conf = $conf;
+    }
+
+    private function getAnEmptyConf()
+    {
+        return [
+            "router" => [],
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp"
+                ],
+                "aliases" => [
+                    "renderer" => "UpCloo\\Renderer\\Jsonp",
+                ]
+            ],
+            "listeners" => []
+        ];
     }
 
     /**
@@ -57,16 +73,19 @@ class App
                 $action = $match->getParam("action");
                 $this->hydrate($this, $controller);
 
-                $this->events()->attach("execute", array($controller, $action));
+                $this->events()->attach("execute", [$controller, $action]);
             }
 
             return $match;
         });
 
-        if ($this->services()->has("renderer")) {
-            $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
-            $this->events()->attach("renderer", array($renderer, "render"));
+        $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
+
+        if ($this->isNotARenderer($renderer)) {
+            throw new \InvalidArgumentException("The 'renderer' alias must implement Renderizable interface");
         }
+
+        $this->events()->attach("renderer", [$renderer, "render"]);
 
         $this->events()->attach("send.response", function($event) {
             $this->response()->send();
@@ -75,12 +94,13 @@ class App
         return $this;
     }
 
+    private function isNotARenderer($renderer)
+    {
+        return (!($renderer instanceof Renderer\Renderizable));
+    }
+
     private function registerRouter()
     {
-        if (!array_key_exists("router", $this->conf)) {
-            $this->conf["router"] = array();
-        }
-
         $this->router = TreeRouteStack::factory($this->conf["router"]);
     }
 
@@ -89,10 +109,6 @@ class App
      */
     private function registerServices()
     {
-        if (!array_key_exists("services", $this->conf)) {
-            $this->conf["services"] = array();
-        }
-
         $services = $this->conf["services"];
         $config = new ServiceManagerConfig($services);
         $serviceManager = new ServiceManager($config);
@@ -102,10 +118,8 @@ class App
 
     private function registerListeners()
     {
-        if (array_key_exists("listeners", $this->conf)) {
-            foreach ($this->conf["listeners"] as $eventName => $callables) {
-                $this->registerCallbacks($eventName, $callables);
-            }
+        foreach ($this->conf["listeners"] as $eventName => $callables) {
+            $this->registerCallbacks($eventName, $callables);
         }
     }
 
