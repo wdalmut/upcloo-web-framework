@@ -131,3 +131,11 @@ the Apache "ab" tool (as load system).
 As you can see, this micro framework response, in mean, in less than one order
 of magnitude than ZF2 standard application with a JSON RESTful module installed
 
+## Build Status
+
+    * Master branch
+        * [![Build Status](https://secure.travis-ci.org/wdalmut/upcloo-web-framework.png?branch=master)](http://travis-ci.org/wdalmut/upcloo-web-framework?branch=master)
+    * Develop branch
+        * [![Build Status](https://secure.travis-ci.org/wdalmut/upcloo-web-framework.png?branch=develop)](http://travis-ci.org/wdalmut/upcloo-web-framework?branch=develop)
+
+
