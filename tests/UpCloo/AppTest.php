@@ -306,5 +306,39 @@ class AppTest extends Test\WebTestCase
         $this->dispatch("/a-page");
     }
 
+    public function testHydrateControllers()
+    {
+        $app = new App([[
+            "router" => [
+                "routes" => [
+                    "elb" => [
+                        "type" => "Literal",
+                        "options" => [
+                            "route" => "/test",
+                            "defaults" => [
+                                "controller" => "UpCloo\\Test\\HyController",
+                                "action" => "anAction",
+                            ]
+                        ],
+                        "may_terminate" => true,
+                    ],
+                ]
+            ],
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Test\\HyController" => "UpCloo\\Test\\HyController",
+                ]
+            ]
+        ]]);
+        $this->setApp($app);
+        $this->dispatch("/test");
+
+        $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyController");
+
+        $this->assertInstanceOf("Zend\\EventManager\\EventManager", $controller->events());
+        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->services());
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->getRequest());
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->getResponse());
+    }
 }
 

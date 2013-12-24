@@ -11,6 +11,7 @@ use Zend\ServiceManager\Config as ServiceManagerConfig;
 use Zend\Mvc\Router;
 use Zend\Uri\UriInterface;
 use Zend\EventManager\Event;
+use Zend\Stdlib\Hydrator\ClassMethods as Hydrator;
 
 class App
 {
@@ -20,8 +21,6 @@ class App
     private $request;
     private $response;
     private $serviceManager;
-
-    use Hydrator\ControllerHydrator;
 
     public function __construct(array $userConfigs)
     {
@@ -91,7 +90,14 @@ class App
 
             $callable = $this->resolveCallableWithServiceManager([$controller, $action]);
 
-            $this->hydrate($this, $callable[0]);
+            $data = [
+                "request"        => $this->request(),
+                "response"       => $this->response(),
+                "eventManager"   => $this->events(),
+                "serviceManager" => $this->services(),
+            ];
+            $hydrator = new Hydrator();
+            $hydrator->hydrate($data, $callable[0]);
 
             $this->events()->attach("execute", $callable);
         }
