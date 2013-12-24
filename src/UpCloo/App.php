@@ -23,13 +23,19 @@ class App
 
     use Hydrator\ControllerHydrator;
 
-    public function __construct(array $configs)
+    public function __construct(array $userConfigs)
     {
-        $conf = $this->getAnEmptyConf();
+        $baseConfig = $this->getAnEmptyConf();
+        $this->conf = $this->mergeConfigs($baseConfig, $userConfigs);
+    }
+
+    private function mergeConfigs(array $conf, array $configs)
+    {
         foreach ($configs as $confFile) {
             $conf = array_replace_recursive($conf, $confFile);
         }
-        $this->conf = $conf;
+
+        return $conf;
     }
 
     private function getAnEmptyConf()
