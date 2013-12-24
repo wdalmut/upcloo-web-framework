@@ -340,5 +340,11 @@ class AppTest extends Test\WebTestCase
         $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->getRequest());
         $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->getResponse());
     }
+
+    public function testGetTheDefaultRequest()
+    {
+        $app = new App([]);
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $app->request());
+    }
 }
 
