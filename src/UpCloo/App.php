@@ -39,10 +39,11 @@ class App
      */
     public function bootstrap()
     {
+        $this->registerRouter();
         $this->registerServices();
         $this->registerListeners();
 
-        $closure = function($event){
+        $this->events()->attach("route", function($event){
             $request = $event->getParam('request');
             $match = $this->getRouter()->match($request);
 
@@ -60,11 +61,7 @@ class App
             }
 
             return $match;
-        };
-
-        $this->router = TreeRouteStack::factory($this->conf["router"]);
-        $closure->bindTo($this);
-        $this->events()->attach("route", $closure);
+        });
 
         if ($this->services()->has("renderer")) {
             $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
@@ -76,6 +73,15 @@ class App
         });
 
         return $this;
+    }
+
+    private function registerRouter()
+    {
+        if (!array_key_exists("router", $this->conf)) {
+            $this->conf["router"] = array();
+        }
+
+        $this->router = TreeRouteStack::factory($this->conf["router"]);
     }
 
     /**
@@ -120,9 +126,9 @@ class App
         return $this->router;
     }
 
-    public function setEventManager(EventManagerInterface $em)
+    public function setEventManager(EventManagerInterface $eventManager)
     {
-        $this->events = $em;
+        $this->events = $eventManager;
     }
 
     public function event()
