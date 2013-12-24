@@ -43,7 +43,8 @@ class App
             "router" => [],
             "services" => [
                 "invokables" => [
-                    "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp"
+                    "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp",
+                    "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json",
                 ],
                 "aliases" => [
                     "renderer" => "UpCloo\\Renderer\\Jsonp",
