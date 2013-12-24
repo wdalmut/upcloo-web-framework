@@ -11,11 +11,13 @@ class WebTestCase extends \PHPUnit_Framework_TestCase
 {
     private $app;
 
-    public function setApp($app)
+    public function setApp($app, $disableRenderer = true)
     {
-        $app->events()->attach("send.response", function($event) {
-            $event->stopPropagation(true);
-        }, 100);
+        if ($disableRenderer) {
+            $app->events()->attach("send.response", function($event) {
+                $event->stopPropagation(true);
+            }, 100);
+        }
 
         $this->app = $app;
     }
@@ -25,6 +27,9 @@ class WebTestCase extends \PHPUnit_Framework_TestCase
         return $this->app;
     }
 
+    /**
+     * @todo needs refactor
+     */
     public function dispatch($url, $method = "GET", array $params = array())
     {
         $request = new HttpRequest();
