@@ -60,25 +60,7 @@ class App
         $this->registerServices();
         $this->registerListeners();
 
-        $this->events()->attach("route", function($event){
-            $request = $event->getParam('request');
-            $match = $this->getRouter()->match($request);
-
-            if ($match) {
-                $controller = $match->getParam("controller");
-                if (!$this->services()->has($controller)) {
-                    $this->services()->setInvokableClass($controller, $controller);
-                }
-
-                $controller = $this->services()->get($controller);
-                $action = $match->getParam("action");
-                $this->hydrate($this, $controller);
-
-                $this->events()->attach("execute", [$controller, $action]);
-            }
-
-            return $match;
-        });
+        $this->events()->attach("route", [$this, "prepareControllerToBeExecuted"]);
 
         $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
 
@@ -88,11 +70,33 @@ class App
 
         $this->events()->attach("renderer", [$renderer, "render"]);
 
-        $this->events()->attach("send.response", function($event) {
-            $this->response()->send();
-        });
+        $this->events()->attach("send.response", [$this, "sendResponse"]);
 
         return $this;
+    }
+
+    public function sendResponse()
+    {
+        $this->response()->send();
+    }
+
+    public function prepareControllerToBeExecuted($event)
+    {
+        $request = $event->getParam('request');
+        $match = $this->getRouter()->match($request);
+
+        if ($match) {
+            $controller = $match->getParam("controller");
+            $action = $match->getParam("action");
+
+            $callable = $this->resolveCallableWithServiceManager([$controller, $action]);
+
+            $this->hydrate($this, $callable[0]);
+
+            $this->events()->attach("execute", $callable);
+        }
+
+        return $match;
     }
 
     private function isNotARenderer($renderer)
@@ -218,9 +222,6 @@ class App
         return $this->response;
     }
 
-    /**
-     * Run the application
-     */
     public function run()
     {
         $this->bootstrap();

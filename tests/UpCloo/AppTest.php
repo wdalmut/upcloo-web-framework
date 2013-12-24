@@ -28,6 +28,7 @@ class AppTest extends Test\WebTestCase
             ),
             "services" => array(
                 "invokables" => array(
+                    "UpCloo\\Test\\BaseController" => "UpCloo\\Test\\BaseController",
                     "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json",
                 ),
                 "aliases" => array(
@@ -230,6 +231,11 @@ class AppTest extends Test\WebTestCase
                         ],
                         "may_terminate" => true,
                     ],
+                ]
+            ],
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Test\\HaltController" => "UpCloo\\Test\\HaltController",
                 ]
             ]
         ]]);
