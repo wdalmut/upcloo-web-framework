@@ -1,10 +1,7 @@
 <phpunit bootstrap="./bootstrap.php">
     <testsuites>
         <testsuite name="UpCloo_Unit">
-            <directory>./unit</directory>
-        </testsuite>
-        <testsuite name="UpCloo_Functional">
-            <directory>./functional</directory>
+            <directory>.</directory>
         </testsuite>
     </testsuites>
     <filter>
