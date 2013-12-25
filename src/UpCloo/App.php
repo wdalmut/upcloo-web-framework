@@ -1,6 +1,9 @@
 <?php
 namespace UpCloo;
 
+use Zend\Mvc\Router;
+use Zend\Uri\UriInterface;
+use Zend\EventManager\Event;
 use Zend\Mvc\Router\Http\TreeRouteStack;
 use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerInterface;
@@ -8,9 +11,6 @@ use Zend\Http\PhpEnvironment\Request;
 use Zend\Http\PhpEnvironment\Response;
 use Zend\ServiceManager\ServiceManager;
 use Zend\ServiceManager\Config as ServiceManagerConfig;
-use Zend\Mvc\Router;
-use Zend\Uri\UriInterface;
-use Zend\EventManager\Event;
 use Zend\Stdlib\Hydrator\ClassMethods as Hydrator;
 
 class App
@@ -43,8 +43,8 @@ class App
             "router" => [],
             "services" => [
                 "invokables" => [
-                    "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp",
                     "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json",
+                    "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp",
                 ],
                 "aliases" => [
                     "renderer" => "UpCloo\\Renderer\\Jsonp",
@@ -62,7 +62,7 @@ class App
 
         $this->events()->attach("route", [$this, "prepareControllerToBeExecuted"]);
 
-        $renderer = $this->services()->get("renderer", "UpCloo\\Renderer\\Jsonp");
+        $renderer = $this->services()->get("renderer");
 
         if ($this->isNotARenderer($renderer)) {
             throw new \InvalidArgumentException("The 'renderer' alias must implement Renderizable interface");
@@ -116,15 +116,12 @@ class App
         $this->router = TreeRouteStack::factory($this->conf["router"]);
     }
 
-    /**
-     * Register services into the ServiceManager
-     */
     private function registerServices()
     {
         $serviceManager = $this->services();
 
-        $config = new ServiceManagerConfig($this->conf["services"]);
-        $config->configureServiceManager($serviceManager);
+        $serviceConfig = new ServiceManagerConfig($this->conf["services"]);
+        $serviceConfig->configureServiceManager($serviceManager);
 
         $this->services()->setService("Config", $this->conf);
     }
@@ -238,12 +235,13 @@ class App
         try {
             $controllerExecution = $this->dispatchUserRequest();
         } catch (Exception\HaltException $e) {
-            $controllerExecution = $this->events()->trigger("halt");
+            $controllerExecution = $this->trigger("halt");
         } catch (Exception\PageNotFoundException $e) {
-            $controllerExecution = $this->events()->trigger("404");
+            $this->response()->setStatusCode(Response::STATUS_CODE_404);
+            $controllerExecution = $this->trigger("404");
         } catch (\Exception $e) {
             $this->response()->setStatusCode(Response::STATUS_CODE_500);
-            $controllerExecution = $this->events()->trigger("500", array("exception" => $e));
+            $controllerExecution = $this->trigger("500", array("exception" => $e));
         }
 
         $this->trigger(
@@ -267,14 +265,12 @@ class App
         $routeMatch = $eventCollection->last();
 
         if ($this->isPageMissing($routeMatch)) {
-            $this->response()->setStatusCode(Response::STATUS_CODE_404);
             throw new Exception\PageNotFoundException("page not found");
         }
 
         $this->trigger(
             "pre.fetch",
             array(
-                "eventManager" => $this->events(),
                 "request" => $this->request(),
                 "response" => $this->response(),
                 "routeMatch" => $routeMatch
