@@ -26,7 +26,7 @@ return array(
     "services" => array(
         "invokables" => array(
             "My\\Controller\\Example" => "My\\Controller\\Example",
-            "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp"
+            "My\\Controller\\Error" => "My\\Controller\\Error",
         ),
         "factories" => array(
             "example" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
@@ -35,7 +35,6 @@ return array(
         ),
         "aliases" => array(
             "exampleController" => "My\\Controller\\Example",
-            "renderer" => "UpCloo\\Renderer\\Jsonp"
         )
     ),
     "listeners" => array(

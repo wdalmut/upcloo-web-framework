@@ -65,16 +65,12 @@ return array(
     "services" => array(
         "invokables" => array(
             "Your\\Controller\\Name" => "Your\\Controller\\Name",
-            "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp"
         ),
         "factories" => array(
             "example" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
                 return "that-service";
             }
         ),
-        "aliases" => array(
-            "renderer" => "UpCloo\\Renderer\\Jsonp"
-        )
     )
 );
 ```
