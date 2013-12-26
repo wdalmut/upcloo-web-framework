@@ -11,7 +11,7 @@ use Zend\Http\PhpEnvironment\Request;
 use Zend\Http\PhpEnvironment\Response;
 use Zend\ServiceManager\ServiceManager;
 use Zend\ServiceManager\Config as ServiceManagerConfig;
-use Zend\Stdlib\Hydrator\ClassMethods as Hydrator;
+use Zend\Stdlib\Hydrator\HydratorInterface;
 
 class App
 {
@@ -45,9 +45,11 @@ class App
                 "invokables" => [
                     "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json",
                     "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp",
+                    "Zend\\Stdlib\\Hydrator\\ClassMethods" => "Zend\\Stdlib\\Hydrator\\ClassMethods",
                 ],
                 "aliases" => [
                     "renderer" => "UpCloo\\Renderer\\Jsonp",
+                    "hydrator" => "Zend\\Stdlib\\Hydrator\\ClassMethods",
                 ]
             ],
             "listeners" => []
@@ -91,19 +93,42 @@ class App
 
             $callable = $this->resolveCallableWithServiceManager([$controller, $action]);
 
-            $data = [
-                "request"        => $this->request(),
-                "response"       => $this->response(),
-                "eventManager"   => $this->events(),
-                "serviceManager" => $this->services(),
-            ];
-            $hydrator = new Hydrator();
-            $hydrator->hydrate($data, $callable[0]);
+            if ($this->isHydratable($callable[0])) {
+                $this->hydrateCallableWithBaseServices($callable[0]);
+            }
 
             $this->events()->attach("execute", $callable);
         }
 
         return $match;
+    }
+
+    private function isHydratable($type) {
+        return (is_object($type));
+    }
+
+    private function hydrateCallableWithBaseServices($object)
+    {
+        $data = [
+            "request"        => $this->request(),
+            "response"       => $this->response(),
+            "eventManager"   => $this->events(),
+            "serviceManager" => $this->services(),
+        ];
+
+        if ($this->hasValidHydrator()) {
+            $hydrator = $this->services()->get("hydrator");
+            $hydrator->hydrate($data, $object);
+        }
+    }
+
+    private function hasValidHydrator()
+    {
+        if ($this->services()->get("hydrator") instanceof HydratorInterface) {
+            return true;
+        }
+
+        return false;
     }
 
     private function isNotARenderer($renderer)

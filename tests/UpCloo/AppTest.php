@@ -10,7 +10,14 @@ class AppTest extends Test\WebTestCase
 
     public function setUp()
     {
-        $conf = array(
+        $conf = $this->getAppConf();
+        $app = new App([$conf]);
+        $this->setApp($app);
+    }
+
+    private function getAppConf()
+    {
+        return array(
             "router" => array(
                 "routes" => array(
                     "home" => array(
@@ -29,19 +36,31 @@ class AppTest extends Test\WebTestCase
             "services" => array(
                 "invokables" => array(
                     "UpCloo\\Test\\BaseController" => "UpCloo\\Test\\BaseController",
-                    "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json",
                 ),
-                "aliases" => array(
-                    "renderer" => "UpCloo\\Renderer\\Json",
-                )
             )
         );
-        $app = new App([$conf]);
-        $this->setApp($app);
     }
 
     public function testAppFlowWorks()
     {
+        $this->dispatch("/walter");
+        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $this->getApp()->response()->getContent());
+    }
+
+    public function testAppFlowWorksWithoutHydrator()
+    {
+        $app = new App([$this->getAppConf(), [
+            "services" => [
+                "factories" => [
+                    "fakeHydrator" => function() { return false; },
+                ],
+                "aliases" => [
+                    "hydrator" => "fakeHydrator"
+                ]
+            ]
+        ]]);
+        $this->setApp($app);
+
         $this->dispatch("/walter");
         $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $this->getApp()->response()->getContent());
     }
@@ -332,6 +351,7 @@ class AppTest extends Test\WebTestCase
         ]]);
         $this->setApp($app);
         $this->dispatch("/test");
+
 
         $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyController");
 
