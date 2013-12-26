@@ -1,13 +1,23 @@
 <?php
 namespace UpCloo;
 
+use Zend\EventManager\EventManager;
+use Zend\ServiceManager\ServiceManager;
+
 class AppTest extends Test\WebTestCase
 {
     private $app;
 
     public function setUp()
     {
-        $conf = array(
+        $conf = $this->getAppConf();
+        $app = new App([$conf]);
+        $this->setApp($app);
+    }
+
+    private function getAppConf()
+    {
+        return array(
             "router" => array(
                 "routes" => array(
                     "home" => array(
@@ -25,15 +35,88 @@ class AppTest extends Test\WebTestCase
             ),
             "services" => array(
                 "invokables" => array(
-                    "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json",
+                    "UpCloo\\Test\\BaseController" => "UpCloo\\Test\\BaseController",
                 ),
-                "aliases" => array(
-                    "renderer" => "UpCloo\\Renderer\\Json",
-                )
             )
         );
-        $app = new App([$conf]);
+    }
+
+    public function testAppFlowWorks()
+    {
+        $this->dispatch("/walter");
+        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $this->getApp()->response()->getContent());
+    }
+
+    public function testAppFlowWorksWithoutHydrator()
+    {
+        $app = new App([$this->getAppConf(), [
+            "services" => [
+                "factories" => [
+                    "fakeHydrator" => function() { return false; },
+                ],
+                "aliases" => [
+                    "hydrator" => "fakeHydrator"
+                ]
+            ]
+        ]]);
         $this->setApp($app);
+
+        $this->dispatch("/walter");
+        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $this->getApp()->response()->getContent());
+    }
+
+    public function testConfigurationOverwrite()
+    {
+        $myConf = [
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json"
+                ],
+                "aliases" => [
+                    "renderer" => "UpCloo\\Renderer\\Json",
+                ]
+            ]
+        ];
+        $app = new App([$myConf]);
+        $app->bootstrap();
+
+        $renderer = $app->services()->get("renderer");
+
+        $this->assertInstanceOf("UpCloo\\Renderer\\Json", $renderer);
+    }
+
+    public function testServiceManagerIsNotReplaced()
+    {
+        $app = new App([]);
+
+        $serviceManager = new ServiceManager();
+        $app->setServiceManager($serviceManager);
+
+        $app->bootstrap();
+
+        $this->assertSame($serviceManager, $app->services());
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage The 'renderer' alias must implement Renderizable interface
+     */
+    public function testInvalidRenderer()
+    {
+        $conf = [
+            "services" => [
+                "factories" => [
+                    "UpCloo\\Renderer\\Invalid" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
+                        return "FAIL";
+                    },
+                ],
+                "aliases" => [
+                    "renderer" => "UpCloo\\Renderer\\Invalid",
+                ],
+            ]
+        ];
+        $app = new App([$conf]);
+        $app->bootstrap();
     }
 
     public function testRouteEventIsFired()
@@ -168,6 +251,11 @@ class AppTest extends Test\WebTestCase
                         "may_terminate" => true,
                     ],
                 ]
+            ],
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Test\\HaltController" => "UpCloo\\Test\\HaltController",
+                ]
             ]
         ]]);
         $this->setApp($app);
@@ -228,14 +316,55 @@ class AppTest extends Test\WebTestCase
         $app = new App([]);
         $this->setApp($app, false);
 
-        $responseStub = $this->getMock("Zend\\Http\\PhpEnvironment\\Response");
-        $responseStub->expects($this->once())
+        $responseMock = $this->getMock("Zend\\Http\\PhpEnvironment\\Response", ["send"]);
+        $responseMock->expects($this->once())
             ->method("send")
             ->will($this->returnValue(true));
-        $app->setResponse($responseStub);
+        $app->setResponse($responseMock);
 
         $this->dispatch("/a-page");
     }
 
+    public function testHydrateControllers()
+    {
+        $app = new App([[
+            "router" => [
+                "routes" => [
+                    "elb" => [
+                        "type" => "Literal",
+                        "options" => [
+                            "route" => "/test",
+                            "defaults" => [
+                                "controller" => "UpCloo\\Test\\HyController",
+                                "action" => "anAction",
+                            ]
+                        ],
+                        "may_terminate" => true,
+                    ],
+                ]
+            ],
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Test\\HyController" => "UpCloo\\Test\\HyController",
+                ]
+            ]
+        ]]);
+        $this->setApp($app);
+        $this->dispatch("/test");
+
+
+        $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyController");
+
+        $this->assertInstanceOf("Zend\\EventManager\\EventManager", $controller->events());
+        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->services());
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->getRequest());
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->getResponse());
+    }
+
+    public function testGetTheDefaultRequest()
+    {
+        $app = new App([]);
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $app->request());
+    }
 }
 

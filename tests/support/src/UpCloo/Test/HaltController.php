@@ -3,7 +3,7 @@ namespace UpCloo\Test;
 
 use UpCloo\Exception\HaltException;
 
-class Haltcontroller
+class HaltController
 {
     public function haltMe()
     {

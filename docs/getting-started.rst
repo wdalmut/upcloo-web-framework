@@ -66,14 +66,14 @@ the router and at least one controller. ::
                     ),
                     'may_terminate' => true,
                 )
-             )
-          )
-      ),
-      "services" => array(
-        "aliases" => array(
-          "renderer" => "UpCloo\\Renderer\\Json"
+            )
+        ),
+        "services" => array(
+            "invokables" => array(
+                "My\\NM\\Index" => "My\\NM\\Index",
+            )
         )
-      )
+    )
 
 Now the ActionController
 ------------------------

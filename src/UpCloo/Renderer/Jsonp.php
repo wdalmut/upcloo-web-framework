@@ -3,9 +3,11 @@ namespace UpCloo\Renderer;
 
 use Zend\Http\Exception\InvalidArgumentException;
 
+use Zend\EventManager\Event;
+
 class Jsonp extends Json
 {
-    public function render($event)
+    public function render(Event $event)
     {
         parent::render($event);
 

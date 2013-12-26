@@ -1,4 +1,10 @@
-<phpunit bootstrap="./bootstrap.php">
+<phpunit
+    bootstrap="./bootstrap.php"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    verbose="true">
     <testsuites>
         <testsuite name="UpCloo_Unit">
             <directory>.</directory>
