@@ -43,8 +43,8 @@ class AppTest extends Test\WebTestCase
 
     public function testAppFlowWorks()
     {
-        $this->dispatch("/walter");
-        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $this->getApp()->response()->getContent());
+        $response = $this->dispatch("/walter");
+        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $response->getContent());
     }
 
     public function testAppFlowWorksWithoutHydrator()
@@ -61,8 +61,8 @@ class AppTest extends Test\WebTestCase
         ]]);
         $this->setApp($app);
 
-        $this->dispatch("/walter");
-        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $this->getApp()->response()->getContent());
+        $response = $this->dispatch("/walter");
+        $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $response->getContent());
     }
 
     public function testConfigurationOverwrite()
@@ -70,10 +70,10 @@ class AppTest extends Test\WebTestCase
         $myConf = [
             "services" => [
                 "invokables" => [
-                    "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json"
+                    "UpCloo\\Listener\\Renderer\\Json" => "UpCloo\\Listener\\Renderer\\Json"
                 ],
                 "aliases" => [
-                    "renderer" => "UpCloo\\Renderer\\Json",
+                    "renderer" => "UpCloo\\Listener\\Renderer\\Json",
                 ]
             ]
         ];
@@ -82,7 +82,7 @@ class AppTest extends Test\WebTestCase
 
         $renderer = $app->services()->get("renderer");
 
-        $this->assertInstanceOf("UpCloo\\Renderer\\Json", $renderer);
+        $this->assertInstanceOf("UpCloo\\Listener\\Renderer\\Json", $renderer);
     }
 
     public function testServiceManagerIsNotReplaced()
@@ -97,34 +97,18 @@ class AppTest extends Test\WebTestCase
         $this->assertSame($serviceManager, $app->services());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage The 'renderer' alias must implement Renderizable interface
-     */
-    public function testInvalidRenderer()
-    {
-        $conf = [
-            "services" => [
-                "factories" => [
-                    "UpCloo\\Renderer\\Invalid" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
-                        return "FAIL";
-                    },
-                ],
-                "aliases" => [
-                    "renderer" => "UpCloo\\Renderer\\Invalid",
-                ],
-            ]
-        ];
-        $app = new App([$conf]);
-        $app->bootstrap();
-    }
-
     public function testRouteEventIsFired()
     {
         $routeIsFired = false;
-        $this->getApp()->events()->attach("route", function() use (&$routeIsFired) {
-            $routeIsFired = true;
-        });
+        $this->getApp()->appendConfig([
+            "listeners" => [
+                "route" => [
+                    function() use (&$routeIsFired) {
+                        $routeIsFired = true;
+                    },
+                ]
+            ]
+        ]);
         $this->dispatch("/walter");
 
         $this->assertTrue($routeIsFired);
@@ -133,10 +117,16 @@ class AppTest extends Test\WebTestCase
     public function testRequestedRouteAreCorrectlyParsed()
     {
         $event = null;
-        $this->getApp()->events()->attach("execute", function($e) use (&$event) {
-            $event = $e;
-            $e->stopPropagation(true);
-        }, 100);
+        $this->getApp()->appendConfig([
+            "listeners" => [
+                "execute" => [
+                    function($e) use (&$event) {
+                        $event = $e;
+                        $e->stopPropagation(true);
+                    },
+                ]
+            ]
+        ]);
 
         $this->dispatch("/walter");
 
@@ -169,9 +159,16 @@ class AppTest extends Test\WebTestCase
     public function testRendererEventIsFired()
     {
         $rendererIsFired = false;
-        $this->getApp()->events()->attach("renderer", function() use (&$rendererIsFired) {
-            $rendererIsFired = true;
-        });
+        $this->getApp()->appendConfig([
+            "listeners" => [
+                "renderer" => [
+                    function() use (&$rendererIsFired) {
+                        $rendererIsFired = true;
+                    }
+                ]
+            ]
+        ]);
+
         $this->dispatch("/walter");
 
         $this->assertTrue($rendererIsFired);
@@ -261,9 +258,15 @@ class AppTest extends Test\WebTestCase
         $this->setApp($app);
 
         $isFired = false;
-        $app->events()->attach("halt", function($e) use (&$isFired) {
-            $isFired = true;
-        });
+        $this->getApp()->appendConfig([
+            "listeners" => [
+                "halt" => [
+                    function($e) use (&$isFired) {
+                        $isFired = true;
+                    }
+                ]
+            ]
+        ]);
 
         $this->dispatch("/halt");
 
@@ -293,9 +296,15 @@ class AppTest extends Test\WebTestCase
         $this->setApp($app);
 
         $isFired = false;
-        $app->events()->attach("500", function($e) use (&$isFired) {
-            $isFired = true;
-        });
+        $this->getApp()->appendConfig([
+            "listeners" => [
+                "500" => [
+                    function($e) use (&$isFired) {
+                        $isFired = true;
+                    }
+                ]
+            ]
+        ]);
 
         $this->dispatch("/halt");
 
@@ -359,6 +368,45 @@ class AppTest extends Test\WebTestCase
         $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->services());
         $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->getRequest());
         $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->getResponse());
+    }
+
+    public function testHydratePropertiesControllers()
+    {
+        $app = new App([[
+            "router" => [
+                "routes" => [
+                    "elb" => [
+                        "type" => "Literal",
+                        "options" => [
+                            "route" => "/test",
+                            "defaults" => [
+                                "controller" => "UpCloo\\Test\\HyPropController",
+                                "action" => "anAction",
+                            ]
+                        ],
+                        "may_terminate" => true,
+                    ],
+                ]
+            ],
+            "services" => [
+                "invokables" => [
+                    "UpCloo\\Test\\HyPropController" => "UpCloo\\Test\\HyPropController",
+                    "Zend\\Stdlib\\Hydrator\\ObjectProperty" => "Zend\\Stdlib\\Hydrator\\ObjectProperty",
+                ],
+                "aliases" => [
+                    "hydrator" => "Zend\\Stdlib\\Hydrator\\ObjectProperty"
+                ]
+            ]
+        ]]);
+        $this->setApp($app);
+        $this->dispatch("/test");
+
+        $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyPropController");
+
+        $this->assertInstanceOf("Zend\\EventManager\\EventManager", $controller->eventManager);
+        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->serviceManager);
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->request);
+        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->response);
     }
 
     public function testGetTheDefaultRequest()

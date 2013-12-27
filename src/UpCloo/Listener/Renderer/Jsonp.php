@@ -1,5 +1,5 @@
 <?php
-namespace UpCloo\Renderer;
+namespace UpCloo\Listener\Renderer;
 
 use Zend\Http\Exception\InvalidArgumentException;
 

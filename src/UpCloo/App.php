@@ -1,144 +1,90 @@
 <?php
 namespace UpCloo;
 
-use Zend\Mvc\Router;
-use Zend\Uri\UriInterface;
-use Zend\EventManager\Event;
-use Zend\Mvc\Router\Http\TreeRouteStack;
-use Zend\EventManager\EventManager;
-use Zend\EventManager\EventManagerInterface;
 use Zend\Http\PhpEnvironment\Request;
 use Zend\Http\PhpEnvironment\Response;
 use Zend\ServiceManager\ServiceManager;
 use Zend\ServiceManager\Config as ServiceManagerConfig;
-use Zend\Stdlib\Hydrator\HydratorInterface;
+use Zend\EventManager\Event;
+use Zend\EventManager\EventManager;
+use Zend\EventManager\EventManagerInterface;
 
 class App
 {
     private $conf;
-    private $router;
-    private $events;
     private $request;
     private $response;
+    private $events;
     private $serviceManager;
 
     public function __construct(array $userConfigs)
     {
-        $baseConfig = $this->getAnEmptyConf();
+        $baseConfig = $this->getBaseConf();
         $this->conf = $this->mergeConfigs($baseConfig, $userConfigs);
     }
 
     private function mergeConfigs(array $conf, array $configs)
     {
         foreach ($configs as $confFile) {
-            $conf = array_replace_recursive($conf, $confFile);
+            $conf = $this->mergeConfig($conf, $confFile);
         }
 
         return $conf;
     }
 
-    private function getAnEmptyConf()
+    public function appendConfig(array $userConf)
+    {
+        $this->conf = $this->mergeConfig($this->conf, $userConf);
+    }
+
+    private function mergeConfig($conf, $userConf)
+    {
+        return array_replace_recursive($conf, $userConf);
+    }
+
+    private function getBaseConf()
     {
         return [
             "router" => [],
             "services" => [
                 "invokables" => [
-                    "UpCloo\\Renderer\\Json" => "UpCloo\\Renderer\\Json",
-                    "UpCloo\\Renderer\\Jsonp" => "UpCloo\\Renderer\\Jsonp",
+                    "UpCloo\\Listener\\Renderer\\Json" => "UpCloo\\Listener\\Renderer\\Json",
+                    "UpCloo\\Listener\\Renderer\\Jsonp" => "UpCloo\\Listener\\Renderer\\Jsonp",
                     "Zend\\Stdlib\\Hydrator\\ClassMethods" => "Zend\\Stdlib\\Hydrator\\ClassMethods",
+                    "UpCloo\\Listener\\SendResponseListener" => "UpCloo\\Listener\\SendResponseListener",
+                ],
+                "factories" => [
+                    "UpCloo\\Listener\\RouteListener" => "UpCloo\\Service\\RouteListenerFactory",
                 ],
                 "aliases" => [
-                    "renderer" => "UpCloo\\Renderer\\Jsonp",
+                    "renderer.listener" => "UpCloo\\Listener\\Renderer\\Jsonp",
+                    "route.listener" => "UpCloo\\Listener\\RouteListener",
+                    "response.listener" => "UpCloo\\Listener\\SendResponseListener",
                     "hydrator" => "Zend\\Stdlib\\Hydrator\\ClassMethods",
                 ]
             ],
-            "listeners" => []
+            "listeners" => [
+                "route" => [
+                    ["route.listener", "prepareControllerToBeExecuted"]
+                ],
+                "pre.fetch" => [],
+                "execute" => [],
+                "renderer" => [
+                    ["renderer.listener", "render"]
+                ],
+                "send.response" => [
+                    ["response.listener", "sendResponse"]
+                ],
+            ]
         ];
     }
 
     public function bootstrap()
     {
-        $this->registerRouter();
         $this->registerServices();
-        $this->registerListeners();
-
-        $this->events()->attach("route", [$this, "prepareControllerToBeExecuted"]);
-
-        $renderer = $this->services()->get("renderer");
-
-        if ($this->isNotARenderer($renderer)) {
-            throw new \InvalidArgumentException("The 'renderer' alias must implement Renderizable interface");
-        }
-
-        $this->events()->attach("renderer", [$renderer, "render"]);
-
-        $this->events()->attach("send.response", [$this, "sendResponse"]);
+        $this->registerListenersFromServices();
 
         return $this;
-    }
-
-    public function sendResponse()
-    {
-        $this->response()->send();
-    }
-
-    public function prepareControllerToBeExecuted($event)
-    {
-        $request = $event->getParam('request');
-        $match = $this->getRouter()->match($request);
-
-        if ($match) {
-            $controller = $match->getParam("controller");
-            $action = $match->getParam("action");
-
-            $callable = $this->resolveCallableWithServiceManager([$controller, $action]);
-
-            if ($this->isHydratable($callable[0])) {
-                $this->hydrateCallableWithBaseServices($callable[0]);
-            }
-
-            $this->events()->attach("execute", $callable);
-        }
-
-        return $match;
-    }
-
-    private function isHydratable($type) {
-        return (is_object($type));
-    }
-
-    private function hydrateCallableWithBaseServices($object)
-    {
-        $data = [
-            "request"        => $this->request(),
-            "response"       => $this->response(),
-            "eventManager"   => $this->events(),
-            "serviceManager" => $this->services(),
-        ];
-
-        if ($this->hasValidHydrator()) {
-            $hydrator = $this->services()->get("hydrator");
-            $hydrator->hydrate($data, $object);
-        }
-    }
-
-    private function hasValidHydrator()
-    {
-        if ($this->services()->get("hydrator") instanceof HydratorInterface) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private function isNotARenderer($renderer)
-    {
-        return (!($renderer instanceof Renderer\Renderizable));
-    }
-
-    private function registerRouter()
-    {
-        $this->router = TreeRouteStack::factory($this->conf["router"]);
     }
 
     private function registerServices()
@@ -151,7 +97,7 @@ class App
         $this->services()->setService("Config", $this->conf);
     }
 
-    private function registerListeners()
+    private function registerListenersFromServices()
     {
         foreach ($this->conf["listeners"] as $eventName => $callables) {
             $this->registerCallbacks($eventName, $callables);
@@ -166,25 +112,15 @@ class App
         }
     }
 
-    private function resolveCallableWithServiceManager($callable)
+    public function resolveCallableWithServiceManager($callable)
     {
-        if (is_array($callable)) {
+        if (is_array($callable) && is_string($callable[0])) {
             if ($this->services()->has($callable[0])) {
                 $callable[0] = $this->services()->get($callable[0]);
             }
         }
 
         return $callable;
-    }
-
-    public function getRouter()
-    {
-        return $this->router;
-    }
-
-    public function setEventManager(EventManagerInterface $eventManager)
-    {
-        $this->events = $eventManager;
     }
 
     public function event()
@@ -194,11 +130,17 @@ class App
         return $event;
     }
 
+    public function setEventManager(EventManagerInterface $eventManager)
+    {
+        $this->events = $eventManager;
+    }
+
     public function events()
     {
         if (!$this->events instanceof EventManagerInterface) {
             $this->setEventManager(new EventManager());
         }
+
         return $this->events;
     }
 
@@ -254,7 +196,6 @@ class App
     public function run()
     {
         $this->bootstrap();
-
         $this->trigger("begin");
 
         try {
@@ -279,7 +220,7 @@ class App
         );
 
         $this->trigger("finish");
-        $this->trigger("send.response");
+        $this->trigger("send.response", ['response' => $this->response()]);
     }
 
     private function dispatchUserRequest()

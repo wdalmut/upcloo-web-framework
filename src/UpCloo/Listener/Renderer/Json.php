@@ -1,9 +1,9 @@
 <?php
-namespace UpCloo\Renderer;
+namespace UpCloo\Listener\Renderer;
 
 use Zend\EventManager\Event;
 
-class Json implements Renderizable
+class Json
 {
     public function render(Event $event)
     {
