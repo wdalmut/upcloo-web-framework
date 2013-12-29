@@ -10,9 +10,14 @@ class ArrayProcessor implements Mergeable
         $this->configs = [];
     }
 
+    public function prependConfig(array $config)
+    {
+        array_unshift($this->configs, $config);
+    }
+
     public function appendConfig(array $config)
     {
-        $this->configs[] = $config;
+        array_push($this->configs, $config);
     }
 
     public function merge()

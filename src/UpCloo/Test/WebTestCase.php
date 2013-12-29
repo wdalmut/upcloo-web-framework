@@ -2,49 +2,57 @@
 namespace UpCloo\Test;
 
 use UpCloo\App;
+use UpCloo\App\Engine;
+use UpCloo\App\Boot;
+use UpCloo\App\Config\ArrayProcessor;
 
 class WebTestCase extends \PHPUnit_Framework_TestCase
 {
-    private $app;
+    private $configs;
 
-    public function setApp($app, $disableRenderer = true)
+    public function appendConfig(array $config)
     {
-        if ($disableRenderer) {
-            $app->appendConfig([
-                "services" => [
-                    "factories" => [
-                        "response.stub" => function() {
-                            $stub = $this->getMock("UpCloo\\Listener\\SendResponseListener");
-                            $stub->expects($this->any())
-                                ->method("sendResponse")
-                                ->will($this->returnValue(true));
-
-                            return $stub;
-                        },
-                    ],
-                    "aliases" => [
-                        "response.listener" => "response.stub",
-                    ]
-                ]
-            ]);
+        if (!$this->configs) {
+            $this->configs = new ArrayProcessor();
         }
 
-        $this->app = $app;
+        $this->configs->appendConfig($config);
     }
 
-    public function getApp()
+    private function disableRenderer()
     {
-        return $this->app;
+        $this->appendConfig([
+            "services" => [
+                "factories" => [
+                    "response.stub" => function() {
+                        $stub = $this->getMock("UpCloo\\Listener\\SendResponseListener");
+                        $stub->expects($this->any())
+                            ->method("sendResponse")
+                            ->will($this->returnValue(true));
+
+                        return $stub;
+                    },
+                ],
+                "aliases" => [
+                    "response.listener" => "response.stub",
+                ]
+            ]
+        ]);
     }
 
     public function dispatch($url, $method = "GET", array $params = array())
     {
+        $this->disableRenderer();
+
+        $engine = new Engine();
         $request = Factory\RequestFactory::createRequest($url, $method, $params);
-        $this->getApp()->setRequest($request);
+        $engine->setRequest($request);
 
-        $this->getApp()->run();
+        $app = new App($engine, new Boot($this->configs));
 
-        return $this->getApp()->response();
+        $app->run();
+
+        return $engine->response();
     }
 }
 

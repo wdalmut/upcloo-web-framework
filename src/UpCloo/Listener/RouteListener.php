@@ -39,7 +39,8 @@ class RouteListener
             $controller = $match->getParam("controller");
             $action = $match->getParam("action");
 
-            $callable = $target->resolveCallableWithServiceManager([$controller, $action]);
+            $controller = $target->services()->get($controller, $controller);
+            $callable = [$controller, $action];
 
             if ($this->isHydratable($callable[0])) {
                 if ($this->hasValidHydrator()) {
