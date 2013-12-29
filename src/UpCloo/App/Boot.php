@@ -47,28 +47,28 @@ class Boot
 
     public function bootstrap()
     {
-        $this->conf->prependConfig($this->getBaseConfiguration());
-        $this->conf = $this->conf->merge();
+        $conf = $this->conf;
+        $conf->prependConfig($this->getBaseConfiguration());
 
-        $this->registerServices();
+        $this->registerServices($conf->merge());
         $this->registerListenersFromServices();
 
         return $this;
     }
 
-    private function registerServices()
+    private function registerServices($conf)
     {
         $serviceManager = $this->services();
 
-        $serviceConfig = new ServiceManagerConfig($this->conf["services"]);
+        $serviceConfig = new ServiceManagerConfig($conf["services"]);
         $serviceConfig->configureServiceManager($serviceManager);
 
-        $serviceManager->setService("Config", $this->conf);
+        $serviceManager->setService("Config", $conf);
     }
 
     private function registerListenersFromServices()
     {
-        foreach ($this->conf["listeners"] as $eventName => $callables) {
+        foreach ($this->services()->get("Config")["listeners"] as $eventName => $callables) {
             $this->registerCallbacks($eventName, $callables);
         }
     }
