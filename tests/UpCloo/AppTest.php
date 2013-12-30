@@ -62,39 +62,6 @@ class AppTest extends Test\WebTestCase
         $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $response->getContent());
     }
 
-    public function testConfigurationOverwrite()
-    {
-        $this->markTestSkipped("Not in the right place");
-        $myConf = [
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Listener\\Renderer\\Json" => "UpCloo\\Listener\\Renderer\\Json"
-                ],
-                "aliases" => [
-                    "renderer" => "UpCloo\\Listener\\Renderer\\Json",
-                ]
-            ]
-        ];
-        $this->appendConfig($myConf);
-
-        $renderer = $app->services()->get("renderer");
-
-        $this->assertInstanceOf("UpCloo\\Listener\\Renderer\\Json", $renderer);
-    }
-
-    public function testServiceManagerIsNotReplaced()
-    {
-        $this->markTestSkipped("Not in the right place");
-        $app = new App([]);
-
-        $serviceManager = new ServiceManager();
-        $app->setServiceManager($serviceManager);
-
-        $app->bootstrap();
-
-        $this->assertSame($serviceManager, $app->services());
-    }
-
     public function testRouteEventIsFired()
     {
         $routeIsFired = false;
@@ -301,14 +268,6 @@ class AppTest extends Test\WebTestCase
 
     }
 
-    public function testGetEmptyServiceManagerOnMissingConfiguration()
-    {
-        $this->markTestSkipped("Not in the right place");
-        $app = new App([]);
-
-        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $app->services());
-    }
-
     public function testResponseIsSentToBrowser()
     {
         $this->markTestSkipped("Not useful now...");
@@ -322,83 +281,6 @@ class AppTest extends Test\WebTestCase
         $app->setResponse($responseMock);
 
         $this->dispatch("/a-page");
-    }
-
-    public function testHydrateControllers()
-    {
-        $this->markTestSkipped("Not in the right place");
-        $app = new App([[
-            "router" => [
-                "routes" => [
-                    "elb" => [
-                        "type" => "Literal",
-                        "options" => [
-                            "route" => "/test",
-                            "defaults" => [
-                                "controller" => "UpCloo\\Test\\HyController",
-                                "action" => "anAction",
-                            ]
-                        ],
-                        "may_terminate" => true,
-                    ],
-                ]
-            ],
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Test\\HyController" => "UpCloo\\Test\\HyController",
-                ]
-            ]
-        ]]);
-        $this->setApp($app);
-        $this->dispatch("/test");
-
-
-        $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyController");
-
-        $this->assertInstanceOf("Zend\\EventManager\\EventManager", $controller->events());
-        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->services());
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->getRequest());
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->getResponse());
-    }
-
-    public function testHydratePropertiesControllers()
-    {
-        $this->markTestSkipped("not in the right place");
-        $app = new App([[
-            "router" => [
-                "routes" => [
-                    "elb" => [
-                        "type" => "Literal",
-                        "options" => [
-                            "route" => "/test",
-                            "defaults" => [
-                                "controller" => "UpCloo\\Test\\HyPropController",
-                                "action" => "anAction",
-                            ]
-                        ],
-                        "may_terminate" => true,
-                    ],
-                ]
-            ],
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Test\\HyPropController" => "UpCloo\\Test\\HyPropController",
-                    "Zend\\Stdlib\\Hydrator\\ObjectProperty" => "Zend\\Stdlib\\Hydrator\\ObjectProperty",
-                ],
-                "aliases" => [
-                    "hydrator" => "Zend\\Stdlib\\Hydrator\\ObjectProperty"
-                ]
-            ]
-        ]]);
-        $this->setApp($app);
-        $this->dispatch("/test");
-
-        $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyPropController");
-
-        $this->assertInstanceOf("Zend\\EventManager\\EventManager", $controller->eventManager);
-        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->serviceManager);
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->request);
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->response);
     }
 
     public function testGetTheDefaultRequest()
