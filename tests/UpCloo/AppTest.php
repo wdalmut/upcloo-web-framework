@@ -166,28 +166,6 @@ class AppTest extends Test\WebTestCase
         $this->assertTrue(Test\BaseController::$call);
     }
 
-    public function testAttachServicesToListeners()
-    {
-        $this->markTestSkipped("Not in the right place");
-        $this->appendConfig([
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Test\\BaseController" => "UpCloo\\Test\\BaseController"
-                ]
-            ],
-            "listeners" => [
-                "404" => [
-                    ["UpCloo\\Test\\BaseController", "nonStaticMethod"]
-                ]
-            ]
-        ]);
-        $this->dispatch("/a-page");
-
-        $baseController = $app->services()->get("UpCloo\\Test\\BaseController");
-
-        $this->assertTrue($baseController->nonStaticProperty);
-    }
-
     public function testHaltEventIsFired()
     {
         $this->appendConfig([
@@ -267,27 +245,4 @@ class AppTest extends Test\WebTestCase
         $this->assertEquals(500, $response->getStatusCode());
 
     }
-
-    public function testResponseIsSentToBrowser()
-    {
-        $this->markTestSkipped("Not useful now...");
-        $app = new App([]);
-        $this->setApp($app, false);
-
-        $responseMock = $this->getMock("Zend\\Http\\PhpEnvironment\\Response", ["send"]);
-        $responseMock->expects($this->once())
-            ->method("send")
-            ->will($this->returnValue(true));
-        $app->setResponse($responseMock);
-
-        $this->dispatch("/a-page");
-    }
-
-    public function testGetTheDefaultRequest()
-    {
-        $this->markTestSkipped("not in the right place");
-        $app = new App([]);
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $app->request());
-    }
 }
-
