@@ -1,8 +1,8 @@
 <?php
 namespace UpCloo\App;
 
-use Zend\ServiceManager\ServiceManager;
 use Zend\EventManager\EventManager;
+use Zend\ServiceManager\ServiceManager;
 use Zend\ServiceManager\Config as ServiceManagerConfig;
 
 class Boot

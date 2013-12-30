@@ -37,9 +37,15 @@ $loader = include __DIR__ . '/vendor/autoload.php';
 
 $loader->add("Your", __DIR__ . '/../src');
 
-$conf = include __DIR__ . '/../configs/app.php';
-$app = new \UpCloo\App([$conf]);
+$config = new UpCloo\App\Config\ArrayProcessor();
+$config->appendConfig(include __DIR__ . '/../configs/app.php');
+
+$engine = new UpCloo\App\Engine();
+$boot = new UpCloo\App\Boot($config);
+
+$app = new UpCloo\App($engine, $boot);
 $app->run();
+
 ```
 
 Here is a config (configs/app.php)
@@ -68,7 +74,7 @@ return array(
         ),
         "factories" => array(
             "example" => function(\Zend\ServiceManager\ServiceLocatorInterface $sl) {
-                return "that-service";
+                return "hello";
             }
         ),
     )
@@ -81,11 +87,16 @@ Start with a controller (src/Your/Controller/Name.php)
 <?php
 namespace Your\Controller;
 
+use UpCloo\Controller\ServiceManager;
+
 class Name
 {
+    use ServiceManager;
+
     public function hello()
     {
-        return "world";
+        $hello = $this->services()->get("example");
+        return $hello . " " . "world";
     }
 }
 ```
