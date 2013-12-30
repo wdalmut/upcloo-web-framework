@@ -1,5 +1,5 @@
 <?php
-namespace UpCloo\Renderer;
+namespace UpCloo\Listener\Renderer;
 
 use Zend\EventManager\Event;
 use Zend\Http\Request;
@@ -25,10 +25,10 @@ HeaderField1: text/plain
 foo=bar&
 EOS
         );
-        $p = new \Zend\Stdlib\Parameters(array(
+        $params = new \Zend\Stdlib\Parameters(array(
             'callback' => 'walter'
         ));
-        $request->setQuery($p);
+        $request->setQuery($params);
 
         $response = new Response();
 

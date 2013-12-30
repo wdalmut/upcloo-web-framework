@@ -1,5 +1,5 @@
 <?php
-namespace UpCloo\Renderer;
+namespace UpCloo\Listener\Renderer;
 
 use Zend\EventManager\Event;
 use Zend\Http\PhpEnvironment\Response;
