@@ -45,4 +45,16 @@ class BootTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame($serviceManager, $boot->services());
     }
+
+    public function testEventManagerIsNotReplaced()
+    {
+        $boot = new Boot(new Config\ArrayProcessor());
+
+        $eventManager = new \Zend\EventManager\EventManager();
+        $boot->setEventManager($eventManager);
+
+        $boot->bootstrap();
+
+        $this->assertSame($eventManager, $boot->events());
+    }
 }
