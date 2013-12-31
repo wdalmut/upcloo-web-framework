@@ -3,7 +3,7 @@ Getting Started with UpCloo Framework
 
 The base folder structure is: whatever you want...
 
-I suggest something like this: ::
+We suggest something like this: ::
 
     - configs
     - src
@@ -34,7 +34,14 @@ the `index.php` file. ::
     $loader->add("My", __DIR__ . '/../src');
 
     $conf = include __DIR__ . "/../configs/app.php";
-    $app = new \UpCloo\App([$conf]);
+
+    $config = new UpCloo\App\Config\ArrayProcessor();
+    $config->appendConfig($conf);
+
+    $boot = new UpCloo\App\Boot($config);
+    $engine = new UpCloo\App\Engine();
+
+    $app = new UpCloo\App($engine, $boot);
     $app->run();
 
 As you can see the first to line uses the composer autoloader in order to
@@ -154,4 +161,53 @@ The output should be something similar to this: ::
     OK (1 tests, 1 assertions)
 
 Now you can continue with more interesting things!
+
+Integration testing
+-------------------
+
+You can test your controller in isolation (see :doc:`controllers`) or you can
+run the whole application. If you are interested in this last thing, you have
+to inherits from `UpCloo\Test\WebTestCase` during testing. ::
+
+    <?php
+    namespace Your\NM;
+
+    use UpCloo\Test\WebTestCase;
+
+    class MyControllerTest extends WebTestCase
+    {
+        public function setUp()
+        {
+            $this->appendConfig([
+                "router" => [
+                    ... // Routes
+                ],
+                "services" => [
+                    ... // A conf
+                ],
+                ...
+            ]);
+        }
+
+        public function testMyAction()
+        {
+            $response = $this->dispatch("/my-action"); //get method
+
+            $this->assertEquals(200, $response->getStatusCode());
+            //... more assert
+
+            $content = $response->getContent();
+            //...
+        }
+    }
+
+The `dispatch` method signature is: ::
+
+    public function dispatch($url, $method = "GET", array $params = array())
+
+Possibile methods are:
+
+ * GET
+ * POST
+ * PUT
 

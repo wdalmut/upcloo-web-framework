@@ -122,6 +122,30 @@ the first argument is the redirect location.
 The Redirector traits uses the "Response trait" by itself, for that reason when you use
 the redirector the Response traits is automatically added to your controller.
 
+ServiceManager
+--------------
+
+You can request anything from the service locator through just using the
+`ServiceManager` trait. ::
+
+    <?php
+    namespace Your\NM;
+
+    use UpCloo\Controller\ServiceManager;
+
+    class TheHookContainer
+    {
+        use ServiceManager;
+
+        public function anHook()
+        {
+            $aService = $this->services()->get("a-service");
+
+            ...
+        }
+    }
+
+
 EventManager
 ------------
 
@@ -129,7 +153,7 @@ Inside an event you can attach and fire other events adding the EventManager
 trait::
 
     <?php
-    namespace Your\\NM;
+    namespace Your\NM;
 
     use UpCloo\Controller\EventManager;
 
@@ -139,10 +163,74 @@ trait::
 
         public function anHook()
         {
+            // Attach something to an event
             $this->events()->attach("finish", function() {
                 //Good bye cruel world!
             });
+
+            // Trigger a custom event...
+            $this->events()->trigger("my.hook.event", $this, ["name" => "a name"]);
         }
     }
 
+Test your controllers
+---------------------
+
+You can test your controller in isolation from the entire application, you have
+just to prepare things that you need and inject into your controller.
+
+See an example: ::
+
+    <?php
+    namespace Your\NM;
+
+    use UpCloo\Controller\EventManager;
+
+    class Controller
+    {
+        use EventManager;
+
+        public function myHook($event)
+        {
+            $this->events()->trigger("my.hook.start", $this);
+
+            ... // do something...
+
+            $this->events()->trigger("my.hook.finish", $this, $data);
+            return $data;
+        }
+    }
+
+Your tests could be something like this: ::
+
+    <?php
+    namespace UpCloo\NM;
+
+    use Zend\EventManager\EventManager;
+    use UpCloo\Test\ControllerTestUtils;
+
+    class ControllerTest extends \PHPUnit_Framework_TestCase
+    {
+        use ControllerTestUtils;
+
+        private $object;
+
+        public function setUp()
+        {
+            // Prepare the controller
+            $this->object = new Controller();
+            $this->object->setEventManager(new EventManager());
+        }
+
+        public function testWorkingAction()
+        {
+            $event = $this->getEventFromParams([
+                "param" => "hello"
+            ]);
+
+            $data = $this->object->myHook($event);
+
+            // asserts on data
+        }
+    }
 

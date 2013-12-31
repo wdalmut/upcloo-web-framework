@@ -10,9 +10,7 @@ class AppTest extends Test\WebTestCase
 
     public function setUp()
     {
-        $conf = $this->getAppConf();
-        $app = new App([$conf]);
-        $this->setApp($app);
+        $this->appendConfig($this->getAppConf());
     }
 
     private function getAppConf()
@@ -49,7 +47,7 @@ class AppTest extends Test\WebTestCase
 
     public function testAppFlowWorksWithoutHydrator()
     {
-        $app = new App([$this->getAppConf(), [
+        $this->appendConfig([
             "services" => [
                 "factories" => [
                     "fakeHydrator" => function() { return false; },
@@ -58,49 +56,16 @@ class AppTest extends Test\WebTestCase
                     "hydrator" => "fakeHydrator"
                 ]
             ]
-        ]]);
-        $this->setApp($app);
+        ]);
 
         $response = $this->dispatch("/walter");
         $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $response->getContent());
     }
 
-    public function testConfigurationOverwrite()
-    {
-        $myConf = [
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Listener\\Renderer\\Json" => "UpCloo\\Listener\\Renderer\\Json"
-                ],
-                "aliases" => [
-                    "renderer" => "UpCloo\\Listener\\Renderer\\Json",
-                ]
-            ]
-        ];
-        $app = new App([$myConf]);
-        $app->bootstrap();
-
-        $renderer = $app->services()->get("renderer");
-
-        $this->assertInstanceOf("UpCloo\\Listener\\Renderer\\Json", $renderer);
-    }
-
-    public function testServiceManagerIsNotReplaced()
-    {
-        $app = new App([]);
-
-        $serviceManager = new ServiceManager();
-        $app->setServiceManager($serviceManager);
-
-        $app->bootstrap();
-
-        $this->assertSame($serviceManager, $app->services());
-    }
-
     public function testRouteEventIsFired()
     {
         $routeIsFired = false;
-        $this->getApp()->appendConfig([
+        $this->appendConfig([
             "listeners" => [
                 "route" => [
                     function() use (&$routeIsFired) {
@@ -117,7 +82,7 @@ class AppTest extends Test\WebTestCase
     public function testRequestedRouteAreCorrectlyParsed()
     {
         $event = null;
-        $this->getApp()->appendConfig([
+        $this->appendConfig([
             "listeners" => [
                 "execute" => [
                     function($e) use (&$event) {
@@ -140,26 +105,21 @@ class AppTest extends Test\WebTestCase
 
     public function testMissingPage()
     {
-        $this->dispatch("/missing-page");
-
-        $response = $this->getApp()->response();
+        $response = $this->dispatch("/missing-page");
 
         $this->assertEquals(404, $response->getStatusCode());
     }
 
     public function testAppWorksAlsoWithEmptyConf()
     {
-        $app = new App([]);
-        $this->setApp($app);
-
-        $this->dispatch("/a-page");
-        $this->assertEquals(404, $app->response()->getStatusCode());
+        $response = $this->dispatch("/a-page");
+        $this->assertEquals(404, $response->getStatusCode());
     }
 
     public function testRendererEventIsFired()
     {
         $rendererIsFired = false;
-        $this->getApp()->appendConfig([
+        $this->appendConfig([
             "listeners" => [
                 "renderer" => [
                     function() use (&$rendererIsFired) {
@@ -177,7 +137,7 @@ class AppTest extends Test\WebTestCase
     public function testListenersAreAttachedToInternalEvents()
     {
         $attached = false;
-        $app = new App([[
+        $this->appendConfig([
             "listeners" => [
                 "begin" => [
                     function () use (&$attached) {
@@ -185,8 +145,7 @@ class AppTest extends Test\WebTestCase
                     }
                 ]
             ]
-        ]]);
-        $this->setApp($app);
+        ]);
 
         $this->dispatch("/a-page");
 
@@ -195,45 +154,21 @@ class AppTest extends Test\WebTestCase
 
     public function testAttachAStaticListener()
     {
-        $app = new App([[
+        $this->appendConfig([
             "listeners" => [
                 "404" => [
                     ["UpCloo\\Test\\BaseController", "aStaticListener"]
                 ]
             ]
-        ]]);
-        $this->setApp($app);
+        ]);
         $this->dispatch("/missing-page");
 
         $this->assertTrue(Test\BaseController::$call);
     }
 
-    public function testAttachServicesToListeners()
-    {
-        $app = new App([[
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Test\\BaseController" => "UpCloo\\Test\\BaseController"
-                ]
-            ],
-            "listeners" => [
-                "404" => [
-                    ["UpCloo\\Test\\BaseController", "nonStaticMethod"]
-                ]
-            ]
-        ]]);
-        $this->setApp($app);
-
-        $this->dispatch("/a-page");
-
-        $baseController = $app->services()->get("UpCloo\\Test\\BaseController");
-
-        $this->assertTrue($baseController->nonStaticProperty);
-    }
-
     public function testHaltEventIsFired()
     {
-        $app = new App([[
+        $this->appendConfig([
             "router" => [
                 "routes" => [
                     "elb" => [
@@ -254,11 +189,10 @@ class AppTest extends Test\WebTestCase
                     "UpCloo\\Test\\HaltController" => "UpCloo\\Test\\HaltController",
                 ]
             ]
-        ]]);
-        $this->setApp($app);
+        ]);
 
         $isFired = false;
-        $this->getApp()->appendConfig([
+        $this->appendConfig([
             "listeners" => [
                 "halt" => [
                     function($e) use (&$isFired) {
@@ -268,15 +202,15 @@ class AppTest extends Test\WebTestCase
             ]
         ]);
 
-        $this->dispatch("/halt");
+        $response = $this->dispatch("/halt");
 
         $this->assertTrue($isFired);
-        $this->assertEquals(200, $app->response()->getStatusCode());
+        $this->assertEquals(200, $response->getStatusCode());
     }
 
     public function testApplicationErrorEventIsFired()
     {
-        $app = new App([[
+        $this->appendConfig([
             "router" => [
                 "routes" => [
                     "elb" => [
@@ -292,11 +226,10 @@ class AppTest extends Test\WebTestCase
                     ],
                 ]
             ]
-        ]]);
-        $this->setApp($app);
+        ]);
 
         $isFired = false;
-        $this->getApp()->appendConfig([
+        $this->appendConfig([
             "listeners" => [
                 "500" => [
                     function($e) use (&$isFired) {
@@ -306,113 +239,10 @@ class AppTest extends Test\WebTestCase
             ]
         ]);
 
-        $this->dispatch("/halt");
+        $response = $this->dispatch("/halt");
 
         $this->assertTrue($isFired);
-        $this->assertEquals(500, $app->response()->getStatusCode());
+        $this->assertEquals(500, $response->getStatusCode());
 
-    }
-
-    public function testGetEmptyServiceManagerOnMissingConfiguration()
-    {
-        $app = new App([]);
-
-        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $app->services());
-    }
-
-    public function testResponseIsSentToBrowser()
-    {
-        $app = new App([]);
-        $this->setApp($app, false);
-
-        $responseMock = $this->getMock("Zend\\Http\\PhpEnvironment\\Response", ["send"]);
-        $responseMock->expects($this->once())
-            ->method("send")
-            ->will($this->returnValue(true));
-        $app->setResponse($responseMock);
-
-        $this->dispatch("/a-page");
-    }
-
-    public function testHydrateControllers()
-    {
-        $app = new App([[
-            "router" => [
-                "routes" => [
-                    "elb" => [
-                        "type" => "Literal",
-                        "options" => [
-                            "route" => "/test",
-                            "defaults" => [
-                                "controller" => "UpCloo\\Test\\HyController",
-                                "action" => "anAction",
-                            ]
-                        ],
-                        "may_terminate" => true,
-                    ],
-                ]
-            ],
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Test\\HyController" => "UpCloo\\Test\\HyController",
-                ]
-            ]
-        ]]);
-        $this->setApp($app);
-        $this->dispatch("/test");
-
-
-        $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyController");
-
-        $this->assertInstanceOf("Zend\\EventManager\\EventManager", $controller->events());
-        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->services());
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->getRequest());
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->getResponse());
-    }
-
-    public function testHydratePropertiesControllers()
-    {
-        $app = new App([[
-            "router" => [
-                "routes" => [
-                    "elb" => [
-                        "type" => "Literal",
-                        "options" => [
-                            "route" => "/test",
-                            "defaults" => [
-                                "controller" => "UpCloo\\Test\\HyPropController",
-                                "action" => "anAction",
-                            ]
-                        ],
-                        "may_terminate" => true,
-                    ],
-                ]
-            ],
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Test\\HyPropController" => "UpCloo\\Test\\HyPropController",
-                    "Zend\\Stdlib\\Hydrator\\ObjectProperty" => "Zend\\Stdlib\\Hydrator\\ObjectProperty",
-                ],
-                "aliases" => [
-                    "hydrator" => "Zend\\Stdlib\\Hydrator\\ObjectProperty"
-                ]
-            ]
-        ]]);
-        $this->setApp($app);
-        $this->dispatch("/test");
-
-        $controller = $this->getApp()->services()->get("UpCloo\\Test\\HyPropController");
-
-        $this->assertInstanceOf("Zend\\EventManager\\EventManager", $controller->eventManager);
-        $this->assertInstanceOf("Zend\\ServiceManager\\ServiceManager", $controller->serviceManager);
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $controller->request);
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Response", $controller->response);
-    }
-
-    public function testGetTheDefaultRequest()
-    {
-        $app = new App([]);
-        $this->assertInstanceOf("Zend\\Http\\PhpEnvironment\\Request", $app->request());
     }
 }
-
