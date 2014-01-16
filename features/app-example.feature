@@ -1,7 +1,7 @@
 Feature: Consume a JSON web service with the framework
 
     Background:
-        Given a Name, Email service
+        Given the Name, Email service
 
     Scenario: Try to consume the Name, Email service
         When I ask for the Name, Email service

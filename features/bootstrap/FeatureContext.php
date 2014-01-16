@@ -4,6 +4,9 @@ $loader = require __DIR__ . '/../../vendor/autoload.php';
 $loader->add("UpCloo", __DIR__ . '/../../src');
 $loader->add("UpCloo", __DIR__ . '/../../tests');
 
+require_once 'PHPUnit/Autoload.php';
+require_once 'PHPUnit/Framework/Assert/Functions.php';
+
 use Behat\Behat\Context\ClosuredContextInterface,
     Behat\Behat\Context\TranslatedContextInterface,
     Behat\Behat\Context\BehatContext,
@@ -15,9 +18,11 @@ use UpCloo\Test\AppContext;
 
 class BaseController
 {
-    public function indexAction()
+    private $database;
+
+    public function __construct()
     {
-        return [
+        $this->database =  [
             [
                 "name" => "Walter",
                 "email" => "walter.dalmut@gmail.com",
@@ -27,6 +32,11 @@ class BaseController
                 "email" => "walter.dalmut@corley.it",
             ],
         ];
+    }
+
+    public function listAction()
+    {
+        return $this->database;
     }
 }
 
@@ -43,9 +53,9 @@ class FeatureContext extends BehatContext
     }
 
     /**
-     * @Given /^a Name, Email service$/
+     * @Given /^the Name, Email service$/
      */
-    public function aNameEmailService()
+    public function theNameEmailService()
     {
         $this->getMainContext()
             ->getSubcontext('upcloo_app')
@@ -58,7 +68,7 @@ class FeatureContext extends BehatContext
                                 "route" => "/name-email",
                                 'defaults' => array(
                                     'controller' => 'BaseController',
-                                    'action' => 'indexAction',
+                                    'action' => 'listAction',
                                 )
                             ),
                             'may_terminate' => true
@@ -92,13 +102,9 @@ class FeatureContext extends BehatContext
 
         foreach ($rows as $row) {
             $content = array_shift($remote);
-            if ($row["Name"] != $content->name) {
-                throw new \RuntimeException("Not equals! " . $row["Name"] . " != " . $content->name);
-            }
 
-            if ($row["Email"] != $content->email) {
-                throw new \RuntimeException("Not equals! " . $row["Email"] . " != " . $content->email);
-            }
+            assertEquals($row["Name"], $content->name);
+            assertEquals($row["Email"], $content->email);
         }
     }
 }
