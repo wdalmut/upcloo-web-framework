@@ -88,17 +88,16 @@ class FeatureContext extends BehatContext
     public function nameEmailServiceRepliesWith(TableNode $table)
     {
         $remote = json_decode($this->response->getContent());
-        $rows = $table->getRows();
-        array_shift($rows);
+        $rows = $table->getHash();
 
         foreach ($rows as $row) {
             $content = array_shift($remote);
-            if ($row[0] != $content->name) {
-                throw new \RuntimeException("Not equals! " . $row[0] . " != " . $content->name);
+            if ($row["Name"] != $content->name) {
+                throw new \RuntimeException("Not equals! " . $row["Name"] . " != " . $content->name);
             }
 
-            if ($row[1] != $content->email) {
-                throw new \RuntimeException("Not equals! " . $row[1] . " != " . $content->email);
+            if ($row["Email"] != $content->email) {
+                throw new \RuntimeException("Not equals! " . $row["Email"] . " != " . $content->email);
             }
         }
     }
