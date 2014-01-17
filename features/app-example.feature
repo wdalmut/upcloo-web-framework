@@ -1,4 +1,7 @@
 Feature: Consume a JSON web service with the framework
+    In order to consume the web service
+    As a JSON client
+    I want to read data from the remote service
 
     Background:
         Given the Name, Email service
