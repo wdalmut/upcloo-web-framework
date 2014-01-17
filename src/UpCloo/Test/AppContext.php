@@ -40,7 +40,7 @@ class AppContext extends BehatContext
     public function dispatch($path, $method, array $data = [])
     {
         $engine = new Engine();
-        $request = Factory\RequestFactory::createRequest("/name-email", "GET", []);
+        $request = Factory\RequestFactory::createRequest($path, $method, $data);
         $engine->setRequest($request);
 
         $app = new App($engine, new Boot($this->configs));
