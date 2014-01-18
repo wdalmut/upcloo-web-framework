@@ -24,7 +24,7 @@ class AppContext extends BehatContext
         $this->appendConfig([
             "listeners" => [
                 "begin" => [
-                    function($e) {
+                    "renderer" => function($e) {
                         $e->getTarget()->events()->clearListeners("send.response");
                     }
                 ],
@@ -35,12 +35,14 @@ class AppContext extends BehatContext
     public function appendConfig(array $config)
     {
         $this->configs->appendConfig($config);
+        return $this;
     }
 
     public function dispatch($path, $method, array $data = [])
     {
-        $engine = new Engine();
         $request = Factory\RequestFactory::createRequest($path, $method, $data);
+
+        $engine = new Engine();
         $engine->setRequest($request);
 
         $app = new App($engine, new Boot($this->configs));
