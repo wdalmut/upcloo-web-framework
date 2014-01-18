@@ -103,39 +103,6 @@ php -S localhost:8080 -t web
 
 Go to your page `-> localhost:8080/walter`
 
-## Comparison between ZF2 and this micro framework
-
-ZF2 is a fullstack, general purpose, framework and it can assolve a large
-set of problems. The flexibility of ZF2 components allows any
-developer to create a personal framework that assolve a particular scenario
-that improve things with the drawback of loosing stuffs. For example this
-framework lose the ModuleManager and a lot of other things that we don't need.
-On the other hand we can get different benefits. A simple performance test on
-the same problem resolved with ZF2 (JSON RESTful) and this framework generate
-something like this:
-
-```
-Concurrency level: 5
-
-                +-------+-----------+-----------+-------+-----------+-------+
-                | #/s   | min (ms)  | max (ms)  | mean  | median    | sd    |
-    +-----------+-------+-----------+-----------+-------+-----------+-------+
-    + ZF2       | 39    | 33        | 146       | 126   | 126       | 4.9   |
-    +-----------+-------+-----------+-----------+-------+-----------+-------+
-    + micro     | 145   | 23        | 61        | 34    | 33        | 4.5   |
-    +-----------+-------+-----------+-----------+-------+-----------+-------+
-    + micro [o] | 184   | 23        | 48        | 27    | 26        | 3.9   |
-    +-----------+-------+-----------+-----------+-------+-----------+-------+
-```
-
-[o] Optimize loader (`php composer.phar install -o`)
-
-This report is generated using the internal php web server (as web server) and
-the Apache "ab" tool (as load system).
-
-As you can see, this micro framework response, in mean, in less than one order
-of magnitude than ZF2 standard application with a JSON RESTful module installed
-
 ## Build Status
 
 * Master branch
