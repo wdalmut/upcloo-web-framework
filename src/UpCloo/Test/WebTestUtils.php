@@ -22,12 +22,9 @@ trait WebTestUtils
     private function disableRenderer()
     {
         $this->appendConfig([
-            "services" => [
-                "invokables" => [
-                    "response.stub" => "UpCloo\\Test\\Listener\\SendResponseListener"
-                ],
-                "aliases" => [
-                    "response.listener" => "response.stub",
+            "listeners" => [
+                "send.response" => [
+                    "response" => function() {}
                 ]
             ]
         ]);
