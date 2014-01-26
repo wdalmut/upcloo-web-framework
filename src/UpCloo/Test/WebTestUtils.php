@@ -12,11 +12,10 @@ trait WebTestUtils
 
     public function appendConfig(array $config)
     {
-        if (!$this->configs) {
-            $this->configs = new ArrayProcessor();
-        }
+        $configs = $this->getConfigs();
+        $configs->appendConfig($config);
 
-        $this->configs->appendConfig($config);
+        return $this;
     }
 
     private function disableRenderer()
@@ -43,5 +42,14 @@ trait WebTestUtils
         $app->run();
 
         return $engine->response();
+    }
+
+    public function getConfigs()
+    {
+        if (!$this->configs) {
+            $this->configs = new ArrayProcessor();
+        }
+
+        return $this->configs;
     }
 }
