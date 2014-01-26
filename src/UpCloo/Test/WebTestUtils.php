@@ -23,15 +23,8 @@ trait WebTestUtils
     {
         $this->appendConfig([
             "services" => [
-                "factories" => [
-                    "response.stub" => function() {
-                        $stub = $this->getMock("UpCloo\\Listener\\SendResponseListener");
-                        $stub->expects($this->any())
-                            ->method("sendResponse")
-                            ->will($this->returnValue(true));
-
-                        return $stub;
-                    },
+                "invokables" => [
+                    "response.stub" => "UpCloo\\Test\\Listener\\SendResponseListener"
                 ],
                 "aliases" => [
                     "response.listener" => "response.stub",
