@@ -96,7 +96,7 @@ class AppTest extends Test\WebTestCase
         $this->dispatch("/walter");
 
         $this->assertInstanceOf("Zend\\EventManager\\Event", $event);
-        $this->assertInstanceOf("Zend\Mvc\Router\Http\RouteMatch", $event->getTarget());
+        $this->assertInstanceOf("Zend\\Mvc\\Router\\Http\\RouteMatch", $event->getTarget());
 
         $routeMatch = $event->getTarget();
         $this->assertEquals("UpCloo\\Test\\BaseController", $routeMatch->getParam("controller"));
