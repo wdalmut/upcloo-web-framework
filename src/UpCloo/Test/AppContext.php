@@ -11,44 +11,5 @@ use UpCloo\App,
 
 class AppContext extends BehatContext
 {
-    private $configs;
-
-    public function __construct()
-    {
-        $this->configs = new ArrayProcessor();
-        $this->disableRenderer();
-    }
-
-    public function disableRenderer()
-    {
-        $this->appendConfig([
-            "listeners" => [
-                "begin" => [
-                    "renderer" => function($e) {
-                        $e->getTarget()->events()->clearListeners("send.response");
-                    }
-                ],
-            ]
-        ]);
-    }
-
-    public function appendConfig(array $config)
-    {
-        $this->configs->appendConfig($config);
-        return $this;
-    }
-
-    public function dispatch($path, $method, array $data = [])
-    {
-        $request = Factory\RequestFactory::createRequest($path, $method, $data);
-
-        $engine = new Engine();
-        $engine->setRequest($request);
-
-        $app = new App($engine, new Boot($this->configs));
-
-        $app->run();
-
-        return $engine->response();
-    }
+    use WebTestUtils;
 }
