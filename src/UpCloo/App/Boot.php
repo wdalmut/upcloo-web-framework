@@ -115,15 +115,15 @@ class Boot
             ],
             "listeners" => [
                 "route" => [
-                    ["route.listener", "prepareControllerToBeExecuted"]
+                    "route" => ["route.listener", "prepareControllerToBeExecuted"]
                 ],
                 "pre.fetch" => [],
                 "execute" => [],
                 "renderer" => [
-                    ["renderer.listener", "render"]
+                    "renderer" => ["renderer.listener", "render"]
                 ],
                 "send.response" => [
-                    ["response.listener", "sendResponse"]
+                    "response" => ["response.listener", "sendResponse"]
                 ],
             ]
         ];

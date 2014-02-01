@@ -12,29 +12,18 @@ trait WebTestUtils
 
     public function appendConfig(array $config)
     {
-        if (!$this->configs) {
-            $this->configs = new ArrayProcessor();
-        }
+        $configs = $this->getConfigs();
+        $configs->appendConfig($config);
 
-        $this->configs->appendConfig($config);
+        return $this;
     }
 
     private function disableRenderer()
     {
         $this->appendConfig([
-            "services" => [
-                "factories" => [
-                    "response.stub" => function() {
-                        $stub = $this->getMock("UpCloo\\Listener\\SendResponseListener");
-                        $stub->expects($this->any())
-                            ->method("sendResponse")
-                            ->will($this->returnValue(true));
-
-                        return $stub;
-                    },
-                ],
-                "aliases" => [
-                    "response.listener" => "response.stub",
+            "listeners" => [
+                "send.response" => [
+                    "response" => function() {}
                 ]
             ]
         ]);
@@ -53,5 +42,14 @@ trait WebTestUtils
         $app->run();
 
         return $engine->response();
+    }
+
+    public function getConfigs()
+    {
+        if (!$this->configs) {
+            $this->configs = new ArrayProcessor();
+        }
+
+        return $this->configs;
     }
 }

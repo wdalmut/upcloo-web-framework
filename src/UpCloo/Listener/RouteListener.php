@@ -44,24 +44,29 @@ class RouteListener
             }
             $callable = [$controller, $action];
 
-            if ($this->isHydratable($callable[0])) {
-                if ($this->hasValidHydrator()) {
-                    $hydrator = $this->getHydrator();
-
-                    $data = [
-                        "request" => $target->request(),
-                        "response" => $target->response(),
-                        "eventManager" => $target->events(),
-                        "serviceManager" => $target->services(),
-                    ];
-                    $hydrator->hydrate($data, $callable[0]);
-                }
-            }
+            $this->hydrateCallableWithTargetServices($callable, $target);
 
             $target->events()->attach("execute", $callable);
         }
 
         return $match;
+    }
+
+    private function hydrateCallableWithTargetServices($callable, $target)
+    {
+        if ($this->isHydratable($callable[0])) {
+            if ($this->hasValidHydrator()) {
+                $hydrator = $this->getHydrator();
+
+                $data = [
+                    "request" => $target->request(),
+                    "response" => $target->response(),
+                    "eventManager" => $target->events(),
+                    "serviceManager" => $target->services(),
+                ];
+                $hydrator->hydrate($data, $callable[0]);
+            }
+        }
     }
 
     private function isHydratable($type) {
