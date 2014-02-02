@@ -88,8 +88,7 @@ class Engine
 
         $this->trigger("renderer", ["data" => $controllerExecution,]);
 
-        $this->trigger("finish");
-        $this->trigger("send.response", ['response' => $this->response()]);
+        $this->trigger("finish", ['response' => $this->response()]);
     }
 
     private function dispatchUserRequestRelatedEvents()
