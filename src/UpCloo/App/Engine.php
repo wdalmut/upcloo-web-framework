@@ -45,7 +45,7 @@ class Engine
         return $event;
     }
 
-    public function trigger($name, array $params = array())
+    public function trigger($name, array $params = [])
     {
         $event = $this->event();
         $event->setParams($params);
@@ -103,7 +103,7 @@ class Engine
             $controllerExecution = $this->trigger("404");
         } catch (\Exception $e) {
             $this->response()->setStatusCode(Response::STATUS_CODE_500);
-            $controllerExecution = $this->trigger("500", array("exception" => $e));
+            $controllerExecution = $this->trigger("500", ["exception" => $e]);
         }
 
        return $controllerExecution;
@@ -113,7 +113,7 @@ class Engine
     {
         $request = $this->request();
 
-        $eventCollection = $this->trigger("route", array("request" => $request));
+        $eventCollection = $this->trigger("route", ["request" => $request]);
         $routeMatch = $eventCollection->last();
 
         if (null === $routeMatch) {
@@ -122,7 +122,7 @@ class Engine
 
         $this->response()->setStatusCode(Response::STATUS_CODE_200);
 
-        $this->trigger("pre.fetch", [ "routeMatch" => $routeMatch ]);
+        $this->trigger("pre.fetch", ["routeMatch" => $routeMatch]);
         $controllerExecution = $this->events()->trigger("execute", $routeMatch);
 
         return $controllerExecution;
