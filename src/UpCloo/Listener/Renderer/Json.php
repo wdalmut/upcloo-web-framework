@@ -8,7 +8,7 @@ class Json
     public function render(Event $event)
     {
         $dataPack = $this->getDataPack($event);
-        $response = $event->getParam("response");
+        $response = $event->getTarget()->response();
 
         $response->getHeaders()->addHeaders(
             array(

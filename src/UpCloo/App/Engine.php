@@ -84,7 +84,17 @@ class Engine
     {
         $this->trigger("begin");
 
-        try {
+        $controllerExecution = $this->dispatchUserRequestRelatedEvents();
+
+        $this->trigger("renderer", ["data" => $controllerExecution,]);
+
+        $this->trigger("finish");
+        $this->trigger("send.response", ['response' => $this->response()]);
+    }
+
+    private function dispatchUserRequestRelatedEvents()
+    {
+       try {
             $controllerExecution = $this->dispatchUserRequest();
         } catch (HaltException $e) {
             $controllerExecution = $this->trigger("halt");
@@ -96,17 +106,7 @@ class Engine
             $controllerExecution = $this->trigger("500", array("exception" => $e));
         }
 
-        $this->trigger(
-            "renderer",
-            array(
-                "data" => $controllerExecution,
-                "request" => $this->request(),
-                "response" => $this->response()
-            )
-        );
-
-        $this->trigger("finish");
-        $this->trigger("send.response", ['response' => $this->response()]);
+       return $controllerExecution;
     }
 
     private function dispatchUserRequest()
@@ -120,16 +120,9 @@ class Engine
             throw new PageNotFoundException("page not found");
         }
 
-        $this->trigger(
-            "pre.fetch",
-            array(
-                "request" => $this->request(),
-                "response" => $this->response(),
-                "routeMatch" => $routeMatch
-            )
-        );
-
         $this->response()->setStatusCode(Response::STATUS_CODE_200);
+
+        $this->trigger("pre.fetch", [ "routeMatch" => $routeMatch ]);
         $controllerExecution = $this->events()->trigger("execute", $routeMatch);
 
         return $controllerExecution;
