@@ -15,28 +15,28 @@ class AppTest extends Test\WebTestCase
 
     private function getAppConf()
     {
-        return array(
-            "router" => array(
-                "routes" => array(
-                    "home" => array(
+        return [
+            "router" => [
+                "routes" => [
+                    "home" => [
                         "type" => "Literal",
-                        "options" => array(
+                        "options" => [
                             "route" => "/walter",
-                            'defaults' => array(
+                            'defaults' => [
                                 'controller' => 'UpCloo\\Test\\BaseController',
                                 'action' => 'indexAction',
-                            )
-                        ),
+                            ]
+                        ],
                         'may_terminate' => true
-                    )
-                )
-            ),
-            "services" => array(
-                "invokables" => array(
+                    ]
+                ]
+            ],
+            "services" => [
+                "invokables" => [
                     "UpCloo\\Test\\BaseController" => "UpCloo\\Test\\BaseController",
-                ),
-            )
-        );
+                ],
+            ]
+        ];
     }
 
     public function testAppFlowWorks()
