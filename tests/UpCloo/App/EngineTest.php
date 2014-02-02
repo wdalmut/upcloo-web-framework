@@ -1,6 +1,8 @@
 <?php
 namespace UpCloo\App;
 
+use UpCloo\Exception\HaltException;
+
 use Zend\EventManager\EventManager;
 use Zend\ServiceManager\ServiceManager;
 
@@ -98,5 +100,55 @@ class EngineTest extends \PHPUnit_Framework_TestCase
 
         $engine->run();
         $this->assertSame("brperef", $result);
+    }
+
+    public function testHaltEventIsFired()
+    {
+        $eventManager = new EventManager();
+        $serviceManager = new ServiceManager();
+
+        $engine = new Engine();
+        $engine->setServiceManager($serviceManager);
+        $engine->setEventManager($eventManager);
+
+        $isCalled = false;
+        $eventManager->attach("halt", function() use (&$isCalled){
+            $isCalled = true;
+        });
+        $eventManager->attach("route", function() use ($eventManager) {
+            $eventManager->attach("pre.fetch", function() {
+                throw new HaltException("");
+            });
+            return new RouteMatch([]);
+        });
+
+        $engine->run();
+
+        $this->assertTrue($isCalled);
+    }
+
+    public function testApplicationErrorEventIsFired()
+    {
+        $eventManager = new EventManager();
+        $serviceManager = new ServiceManager();
+
+        $engine = new Engine();
+        $engine->setServiceManager($serviceManager);
+        $engine->setEventManager($eventManager);
+
+        $isCalled = false;
+        $eventManager->attach("500", function() use (&$isCalled){
+            $isCalled = true;
+        });
+        $eventManager->attach("route", function() use ($eventManager) {
+            $eventManager->attach("pre.fetch", function() {
+                throw new \RuntimeException("");
+            });
+            return new RouteMatch([]);
+        });
+
+        $engine->run();
+
+        $this->assertTrue($isCalled);
     }
 }

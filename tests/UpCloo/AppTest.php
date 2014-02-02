@@ -62,23 +62,6 @@ class AppTest extends Test\WebTestCase
         $this->assertJsonStringEqualsJsonString(json_encode(["ok" => true]), $response->getContent());
     }
 
-    public function testRouteEventIsFired()
-    {
-        $routeIsFired = false;
-        $this->appendConfig([
-            "listeners" => [
-                "route" => [
-                    function() use (&$routeIsFired) {
-                        $routeIsFired = true;
-                    },
-                ]
-            ]
-        ]);
-        $this->dispatch("/walter");
-
-        $this->assertTrue($routeIsFired);
-    }
-
     public function testRequestedRouteAreCorrectlyParsed()
     {
         $event = null;
@@ -103,53 +86,11 @@ class AppTest extends Test\WebTestCase
         $this->assertEquals("indexAction", $routeMatch->getParam("action"));
     }
 
-    public function testMissingPage()
+    public function testMissingPageForce404ErrorHeader()
     {
         $response = $this->dispatch("/missing-page");
 
         $this->assertEquals(404, $response->getStatusCode());
-    }
-
-    public function testAppWorksAlsoWithEmptyConf()
-    {
-        $response = $this->dispatch("/a-page");
-        $this->assertEquals(404, $response->getStatusCode());
-    }
-
-    public function testRendererEventIsFired()
-    {
-        $rendererIsFired = false;
-        $this->appendConfig([
-            "listeners" => [
-                "renderer" => [
-                    function() use (&$rendererIsFired) {
-                        $rendererIsFired = true;
-                    }
-                ]
-            ]
-        ]);
-
-        $this->dispatch("/walter");
-
-        $this->assertTrue($rendererIsFired);
-    }
-
-    public function testListenersAreAttachedToInternalEvents()
-    {
-        $attached = false;
-        $this->appendConfig([
-            "listeners" => [
-                "begin" => [
-                    function () use (&$attached) {
-                        $attached = true;
-                    }
-                ]
-            ]
-        ]);
-
-        $this->dispatch("/a-page");
-
-        $this->assertTrue($attached);
     }
 
     public function testAttachAStaticListener()
@@ -164,85 +105,5 @@ class AppTest extends Test\WebTestCase
         $this->dispatch("/missing-page");
 
         $this->assertTrue(Test\BaseController::$call);
-    }
-
-    public function testHaltEventIsFired()
-    {
-        $this->appendConfig([
-            "router" => [
-                "routes" => [
-                    "elb" => [
-                        "type" => "Literal",
-                        "options" => [
-                            "route" => "/halt",
-                            "defaults" => [
-                                "controller" => "UpCloo\\Test\\HaltController",
-                                "action" => "haltMe",
-                            ]
-                        ],
-                        "may_terminate" => true,
-                    ],
-                ]
-            ],
-            "services" => [
-                "invokables" => [
-                    "UpCloo\\Test\\HaltController" => "UpCloo\\Test\\HaltController",
-                ]
-            ]
-        ]);
-
-        $isFired = false;
-        $this->appendConfig([
-            "listeners" => [
-                "halt" => [
-                    function($e) use (&$isFired) {
-                        $isFired = true;
-                    }
-                ]
-            ]
-        ]);
-
-        $response = $this->dispatch("/halt");
-
-        $this->assertTrue($isFired);
-        $this->assertEquals(200, $response->getStatusCode());
-    }
-
-    public function testApplicationErrorEventIsFired()
-    {
-        $this->appendConfig([
-            "router" => [
-                "routes" => [
-                    "elb" => [
-                        "type" => "Literal",
-                        "options" => [
-                            "route" => "/halt",
-                            "defaults" => [
-                                "controller" => "UpCloo\\Test\\HaltController",
-                                "action" => "genericException",
-                            ]
-                        ],
-                        "may_terminate" => true,
-                    ],
-                ]
-            ]
-        ]);
-
-        $isFired = false;
-        $this->appendConfig([
-            "listeners" => [
-                "500" => [
-                    function($e) use (&$isFired) {
-                        $isFired = true;
-                    }
-                ]
-            ]
-        ]);
-
-        $response = $this->dispatch("/halt");
-
-        $this->assertTrue($isFired);
-        $this->assertEquals(500, $response->getStatusCode());
-
     }
 }
