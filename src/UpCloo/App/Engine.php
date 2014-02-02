@@ -116,7 +116,7 @@ class Engine
         $eventCollection = $this->trigger("route", array("request" => $request));
         $routeMatch = $eventCollection->last();
 
-        if ($this->isPageMissing($routeMatch)) {
+        if (null === $routeMatch) {
             throw new PageNotFoundException("page not found");
         }
 
@@ -126,10 +126,5 @@ class Engine
         $controllerExecution = $this->events()->trigger("execute", $routeMatch);
 
         return $controllerExecution;
-    }
-
-    private function isPageMissing($routeMatch)
-    {
-        return ($routeMatch == null);
     }
 }
