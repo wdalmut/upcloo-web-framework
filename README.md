@@ -98,7 +98,7 @@ class Name
 Start your web service
 
 ```
-php -S localhost:8080 -t web
+php -S localhost:8080 -t web/ web/index.php
 ```
 
 Go to your page `-> localhost:8080/walter`
