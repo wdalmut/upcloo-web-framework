@@ -1,9 +1,11 @@
 <?php
 namespace UpCloo\Listener\Renderer;
 
+use UpCloo\App\Engine;
+
 use Zend\EventManager\Event;
-use Zend\Http\Request;
-use Zend\Http\Response;
+use Zend\Http\PhpEnvironment\Request;
+use Zend\Http\PhpEnvironment\Response;
 
 class JsonpTest extends \PHPUnit_Framework_TestCase
 {
@@ -17,14 +19,8 @@ class JsonpTest extends \PHPUnit_Framework_TestCase
     public function testJsonpResponse()
     {
         $event = new Event();
-        $request = Request::fromString(<<<EOS
-GET /a-path HTTP/1.1
-    \r\n
-HeaderField1: text/plain
-\r\n\r\n
-foo=bar&
-EOS
-        );
+
+        $request = new Request("/path");
         $params = new \Zend\Stdlib\Parameters(array(
             'callback' => 'walter'
         ));
@@ -33,10 +29,14 @@ EOS
         $response = new Response();
 
         $data = new \Zend\EventManager\ResponseCollection();
-        $data->push(array("walter" => "ciao"));
+        $data->push(["walter" => "ciao"]);
+
+        $engine = new Engine();
+        $engine->setRequest($request);
+        $engine->setResponse($response);
+
+        $event->setTarget($engine);
         $event->setParam("data", $data);
-        $event->setParam("response", $response);
-        $event->setParam("request", $request);
 
         $this->object->render($event);
 
@@ -45,28 +45,25 @@ EOS
 
     public function testMissingJsonpFallbackToJson()
     {
-         $event = new Event();
-        $request = Request::fromString(<<<EOS
-GET /a-path HTTP/1.1
-    \r\n
-HeaderField1: text/plain
-\r\n\r\n
-foo=bar&
-EOS
-        );
+        $event = new Event();
 
+        $request = new Request("/path");
         $response = new Response();
 
+        $engine = new Engine();
+        $engine->setRequest($request);
+        $engine->setResponse($response);
+
         $data = new \Zend\EventManager\ResponseCollection();
-        $data->push(array("walter" => "ciao"));
+        $data->push(["walter" => "ciao"]);
+
+        $event->setTarget($engine);
         $event->setParam("data", $data);
-        $event->setParam("response", $response);
-        $event->setParam("request", $request);
 
         $this->object->render($event);
 
         $this->assertJsonStringEqualsJsonString(
-            json_encode(array("walter" => "ciao")), $response->getContent()
+            json_encode(["walter" => "ciao"]), $response->getContent()
         );
 
     }

@@ -122,7 +122,7 @@ class Boot
                 "renderer" => [
                     "renderer" => ["renderer.listener", "render"]
                 ],
-                "send.response" => [
+                "finish" => [
                     "response" => ["response.listener", "sendResponse"]
                 ],
             ]

@@ -11,12 +11,14 @@ class Jsonp extends Json
     {
         parent::render($event);
 
-        $callback = $event->getParam("request")->getQuery("callback", false);
+        $request = $event->getTarget()->request();
+        $callback = $request->getQuery("callback", false);
         if (!$callback || trim($callback) == '') {
             return;
         }
 
-        $dataPack = $event->getParam("response")->getContent();
-        $event->getParam("response")->setContent(sprintf("%s(%s)", $callback, $dataPack));
+        $response = $event->getTarget()->response();
+        $dataPack = $response->getContent();
+        $response->setContent(sprintf("%s(%s)", $callback, $dataPack));
     }
 }

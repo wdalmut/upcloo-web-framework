@@ -1,6 +1,8 @@
 <?php
 namespace UpCloo\Listener\Renderer;
 
+use UpCloo\App\Engine;
+
 use Zend\EventManager\Event;
 use Zend\Http\PhpEnvironment\Response;
 
@@ -18,15 +20,18 @@ class JsonTest extends \PHPUnit_Framework_TestCase
         $event = new Event();
         $response = new Response();
 
-        $data = new \Zend\EventManager\ResponseCollection();
-        $data->push(array("walter" => "ciao"));
+        $app = new Engine();
+        $app->setResponse($response);
 
+        $data = new \Zend\EventManager\ResponseCollection();
+        $data->push(["walter" => "ciao"]);
+
+        $event->setTarget($app);
         $event->setParam("data", $data);
-        $event->setParam("response", $response);
 
         $this->object->render($event);
         $this->assertJsonStringEqualsJsonString(
-            json_encode(array("walter" => "ciao")), $response->getContent()
+            json_encode(["walter" => "ciao"]), $response->getContent()
         );
     }
 }

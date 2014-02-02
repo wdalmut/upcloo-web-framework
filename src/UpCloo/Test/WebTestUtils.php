@@ -22,7 +22,7 @@ trait WebTestUtils
     {
         $this->appendConfig([
             "listeners" => [
-                "send.response" => [
+                "finish" => [
                     "response" => function() {}
                 ]
             ]
