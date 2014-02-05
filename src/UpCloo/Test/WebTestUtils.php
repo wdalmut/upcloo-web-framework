@@ -31,14 +31,13 @@ trait WebTestUtils
 
     public function dispatch($url, $method = "GET", array $params = array())
     {
-        $this->disableRenderer();
-
         $engine = new Engine();
         $request = Factory\RequestFactory::createRequest($url, $method, $params);
         $engine->setRequest($request);
 
-        $app = new App($engine, new Boot($this->configs));
+        $this->disableRenderer();
 
+        $app = new App($engine, new Boot($this->getConfigs()));
         $app->run();
 
         return $engine->response();
